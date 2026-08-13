@@ -19,7 +19,7 @@
       <dependency>
          <groupId>org.seleniumhq.selenium</groupId>
          <artifactId>selenium-java</artifactId>
-         <version>4.46.0</version>
+         <version>4.47.0</version>
       </dependency>
 
       <!-- Source: https://mvnrepository.com/artifact/org.testng/testng -->
@@ -62,7 +62,7 @@
 
             <configuration>
                <suiteXmlFiles>
-                  <suiteXmlFile>src/test/resources/suites/Suite_Bai28_DriverManager_ParallelExecution.xml</suiteXmlFile>
+                  <suiteXmlFile>src/test/resources/suites/Suite_Bai29_PropertiesConfig.xml</suiteXmlFile>
                </suiteXmlFiles>
             </configuration>
 

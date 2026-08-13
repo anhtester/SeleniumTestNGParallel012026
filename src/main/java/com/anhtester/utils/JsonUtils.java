@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class JsonUtils {
 
-   public static final String DATA_FOLDER = "src/test/resources/testdata/";
+   public static final String DATA_FOLDER = "src/test/configs/testdata/";
 
    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
    private static final Type DATA_TYPE = new TypeToken<LinkedHashMap<String, String>>() {

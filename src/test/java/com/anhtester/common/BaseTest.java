@@ -2,12 +2,18 @@ package com.anhtester.common;
 
 import com.anhtester.constants.ConfigData;
 import com.anhtester.drivers.DriverManager;
+import com.anhtester.drivers.ParameterManager;
+import com.anhtester.helpers.PropertiesHelper;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 
@@ -15,32 +21,89 @@ import java.time.Duration;
 
 public class BaseTest {
 
+   @BeforeSuite(alwaysRun = true)
+   public void loadConfigFiles() {
+      PropertiesHelper.loadAllFiles();
+   }
+
    @BeforeMethod
    @Parameters({"browser"})
    public void createDriver(@Optional("chrome") String browserName) {
+      // Ưu tiên: -Dbrowser (Maven) > biến môi trường > config.properties > <parameter> XML
+      // Truyền browserName của XML vào làm giá trị cuối cùng để luôn có fallback chắc chắn
+      browserName = ParameterManager.getConfigValue("browser", browserName);
+
+      // headless đi theo đúng thứ tự ưu tiên như browser
+      boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
+      System.out.println("Browser sử dụng: " + browserName + " | headless: " + headless);
+
       WebDriver driver;
       switch (browserName.trim().toLowerCase()) {
          case "chrome":
             System.out.println("Launching Chrome browser...");
-            driver = new ChromeDriver();
+            driver = new ChromeDriver(getChromeOptions(headless));
             break;
          case "firefox":
             System.out.println("Launching Firefox browser...");
-            driver = new FirefoxDriver();
+            driver = new FirefoxDriver(getFirefoxOptions(headless));
             break;
          case "edge":
             System.out.println("Launching Edge browser...");
-            driver = new EdgeDriver();
+            driver = new EdgeDriver(getEdgeOptions(headless));
             break;
          default:
             System.out.println("Browser: " + browserName + " is invalid, Launching Chrome as browser of choice...");
-            driver = new ChromeDriver();
+            driver = new ChromeDriver(getChromeOptions(headless));
       }
 
       DriverManager.setDriver(driver);
 
-      DriverManager.getDriver().manage().window().maximize();
+      // Ở headless, maximize() không phóng to mà co cửa sổ về 800x600, đè mất --window-size
+      // đã set lúc khởi tạo. Viewport bé làm web chuyển sang layout mobile và ẩn sidebar.
+      if (!headless) {
+         DriverManager.getDriver().manage().window().maximize();
+      }
       DriverManager.getDriver().manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
+   }
+
+   private ChromeOptions getChromeOptions(boolean headless) {
+      ChromeOptions options = new ChromeOptions();
+      if (headless) {
+         options.addArguments("--headless=new");
+         options.addArguments("--window-size=" + getWindowSize());
+         options.addArguments("--disable-gpu");
+      }
+      return options;
+   }
+
+   private EdgeOptions getEdgeOptions(boolean headless) {
+      EdgeOptions options = new EdgeOptions();
+      if (headless) {
+         options.addArguments("--headless=new");
+         options.addArguments("--window-size=" + getWindowSize());
+         options.addArguments("--disable-gpu");
+      }
+      return options;
+   }
+
+   private FirefoxOptions getFirefoxOptions(boolean headless) {
+      FirefoxOptions options = new FirefoxOptions();
+      if (headless) {
+         // Firefox dùng 1 gạch và nhận width/height rời nhau
+         options.addArguments("-headless");
+         options.addArguments("--width=" + ParameterManager.getConfigValue("window_size_x", "1920"));
+         options.addArguments("--height=" + ParameterManager.getConfigValue("window_size_y", "1080"));
+      }
+      return options;
+   }
+
+   /**
+    * Ở chế độ headless thì maximize() không có tác dụng thật, phải set kích thước
+    * cửa sổ ngay lúc khởi tạo, nếu không mặc định chỉ 800x600 làm element bị che.
+    */
+   private String getWindowSize() {
+      return ParameterManager.getConfigValue("window_size_x", "1920")
+              + "," + ParameterManager.getConfigValue("window_size_y", "1080");
    }
 
    @AfterMethod

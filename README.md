@@ -1,8 +1,8 @@
 # ⚡ SeleniumTestNGParallel012026
 
 > Source code khóa học **Selenium Java 01/2026** — Anh Tester
-> Phần **DriverManager với ThreadLocal — chạy test song song** (Bài 28), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
-> Sử dụng **Selenium WebDriver 4.46** + **Java 17** + **Maven** + **TestNG 7.12**.
+> Phần **chạy test song song và cấu hình framework** (Bài 28 → 29), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
+> Sử dụng **Selenium WebDriver 4.47** + **Java 17** + **Maven** + **TestNG 7.12**.
 
 ---
 
@@ -14,6 +14,7 @@
 - [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
 - [Cấu trúc dự án](#-cấu-trúc-dự-án)
 - [Bài 28 — DriverManager với ThreadLocal](#-bài-28--drivermanager-với-threadlocal)
+- [Bài 29 — Properties Config đa môi trường](#-bài-29--properties-config-đa-môi-trường)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -23,7 +24,7 @@
 
 ## 🔀 Repo này khác gì repo chính
 
-Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Page Factory, class `WebUI`...) nằm ở repo **SeleniumMaven012026**. Repo này chỉ giữ phần **chạy song song (parallel)** — và để chạy song song được thì **cách quản lý driver phải đổi**:
+Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Page Factory, class `WebUI`...) nằm ở repo **SeleniumMaven012026**. Repo này bắt đầu từ phần **chạy song song (parallel)** — và để chạy song song được thì **cách quản lý driver phải đổi**:
 
 | | Repo chính (Bài 24 → 27) | Repo này (Bài 28) |
 | :--- | :--- | :--- |
@@ -65,10 +66,11 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    mvn clean install -DskipTests
    ```
 
-4. **Chạy test** — `pom.xml` đã cấu hình sẵn suite parallel của Bài 28:
+4. **Chạy test** — `pom.xml` đang trỏ sẵn tới suite của **Bài 29**:
    ```bash
    mvn test
    ```
+   Muốn chạy lại bộ test POM song song của Bài 28 thì đổi `<suiteXmlFile>` trong `pom.xml` sang `Suite_Bai28_DriverManager_ParallelExecution.xml`.
 
 ---
 
@@ -76,7 +78,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 
 | Thư viện / Tool          | Phiên bản | Mục đích                                    |
 | ------------------------ |-----------| -------------------------------------------- |
-| **Selenium Java**        | 4.46.0    | Tự động hóa trình duyệt web                 |
+| **Selenium Java**        | 4.47.0    | Tự động hóa trình duyệt web                 |
 | **TestNG**               | 7.12.0    | Framework quản lý test case + cơ chế parallel |
 | **Gson**                 | 2.14.0    | Đọc/ghi file JSON trung gian chia sẻ test data |
 | **SLF4J API**            | 2.0.18    | Logging API chuẩn                            |
@@ -100,7 +102,10 @@ SeleniumTestNGParallel012026/
 │   │   │   └── ConfigData.java          # Hằng số dùng chung (URL, tài khoản, tên file JSON test data)
 │   │   ├── drivers/                     # 📌 Trọng tâm Bài 28
 │   │   │   ├── DriverManager.java       # Giữ WebDriver theo ThreadLocal — mỗi luồng một driver riêng
-│   │   │   └── ParameterManager.java    # Đọc <parameter> của TestNG theo đúng luồng đang chạy
+│   │   │   └── ParameterManager.java    # Nguồn cấu hình duy nhất: -D > biến môi trường > properties > <parameter> XML
+│   │   ├── helpers/                     # 📌 Trọng tâm Bài 29
+│   │   │   ├── PropertiesHelper.java    # Load & đọc/ghi file .properties, chồng file môi trường lên file chung
+│   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
 │   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager
 │   │   │   ├── ActionKeyword.java       # Lớp keyword đời đầu (giữ lại từ các bài trước, không còn dùng)
@@ -115,11 +120,11 @@ SeleniumTestNGParallel012026/
 │   └── test/
 │       ├── java/com/anhtester/
 │       │   ├── common/
-│       │   │   └── BaseTest.java        # Tạo driver theo tham số browser → nạp vào DriverManager, quit sau mỗi test
+│       │   │   └── BaseTest.java        # @BeforeSuite load config → tạo driver theo browser/headless, quit sau mỗi test
 │       │   ├── locators/
 │       │   │   └── LocatorsCRM.java     # Kho locator dùng chung (giữ lại từ bài CRM)
 │       │   │
-│       │   └── Bai28_DriverManager_Parallel/   # 📌 Bài 28: POM chạy song song
+│       │   ├── Bai28_DriverManager_Parallel/   # 📌 Bài 28: POM chạy song song
 │       │       ├── pages/                      # Page class KHÔNG nhận driver ở constructor
 │       │       │   ├── BasePage.java           # Menu điều hướng + helper xpathLiteral
 │       │       │   ├── LoginPage.java
@@ -133,10 +138,19 @@ SeleniumTestNGParallel012026/
 │       │           ├── CustomersTest.java      # 3 TC: thêm mới + 2 cách xóa Customer
 │       │           ├── ProjectsTest.java       # 2 TC: thêm mới + xóa Project
 │       │           └── TasksTest.java          # 1 TC: thêm Task gắn với Project
+│       │   │
+│       │   └── Bai29_PropertiesConfig/          # 📌 Bài 29: cấu hình bằng file .properties
+│       │       └── DemoPropertiesConfig.java    # Demo load config chung + config theo môi trường
 │       │
 │       └── resources/
+│           ├── configs/                 # 📌 Bài 29: file cấu hình
+│           │   ├── config.properties    # Cấu hình chung: env, browser, headless, window size, timeout...
+│           │   ├── dev.properties       # Key riêng của môi trường dev (url, base.uri)
+│           │   └── staging.properties   # Key riêng của môi trường staging (url, base.uri)
+│           │
 │           ├── suites/                  # TestNG Suite XML
-│           │   └── Suite_Bai28_DriverManager_ParallelExecution.xml   # Chạy POM song song trên 2 trình duyệt
+│           │   ├── Suite_Bai28_DriverManager_ParallelExecution.xml   # Chạy POM song song trên 2 trình duyệt
+│           │   └── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
 │           │
 │           └── testdata/                # File JSON trung gian (tự sinh khi chạy test)
 │               ├── customer_data.json
@@ -157,7 +171,7 @@ SeleniumTestNGParallel012026/
 | File | Nội dung |
 | :--- | :--- |
 | `drivers/DriverManager.java` | Giữ `WebDriver` trong `ThreadLocal` — `getDriver()`, `setDriver()`, `quit()`. Constructor để `private` vì đây là class tiện ích thuần static. |
-| `drivers/ParameterManager.java` | Đọc `<parameter>` của TestNG **theo đúng luồng đang chạy** qua `Reporter.getCurrentTestResult()`. Có `getBrowser()` trả về `"chrome"` khi không khai báo. |
+| `drivers/ParameterManager.java` | Đọc `<parameter>` của TestNG **theo đúng luồng đang chạy** qua `Reporter.getCurrentTestResult()`. Sang Bài 29 được mở rộng thêm `getConfigValue()` — xem [phần dưới](#-bài-29--properties-config-đa-môi-trường). |
 | `common/BaseTest.java` | `@BeforeMethod` + `@Parameters({"browser"})` → khởi tạo đúng loại driver (Chrome / Firefox / Edge), nạp vào `DriverManager`, maximize và set `pageLoadTimeout`. `@AfterMethod` gọi `DriverManager.quit()`. |
 
 ```java
@@ -239,6 +253,119 @@ Hai thẻ `<test>` chạy song song với nhau (mỗi thẻ một trình duyệt
 
 ---
 
+## 📖 Bài 29 — Properties Config đa môi trường
+
+> Đưa mọi thứ hay đổi (browser, headless, url, timeout...) ra khỏi code Java, gom vào file `.properties` — đổi cấu hình không cần sửa code, không cần build lại.
+
+**Ba class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `helpers/PropertiesHelper.java` | Load file config, đọc `getValue()`, ghi `setValue()`. Load **file chung trước, file môi trường sau** để đè key trùng. |
+| `helpers/SystemHelper.java` | `getCurrentDir()` — lấy thư mục gốc dự án qua `user.dir` để ghép đường dẫn tuyệt đối. |
+| `drivers/ParameterManager.java` | Được mở rộng thêm `getConfigValue()` — **nguồn cấu hình duy nhất** cho cả framework, gộp 4 nguồn theo thứ tự ưu tiên. |
+
+### Ba file cấu hình
+
+```
+src/test/resources/configs/
+├── config.properties     # Cấu hình chung — luôn được load trước
+├── dev.properties        # Chỉ khai báo key KHÁC với file chung
+└── staging.properties
+```
+
+```properties
+# config.properties
+env = staging          # Chọn môi trường. Để trống = chỉ dùng mỗi file này
+browser = firefox
+headless = true
+window_size_x = 1920
+window_size_y = 1080
+explicit_wait_timeout = 10
+```
+
+```properties
+# staging.properties — load sau nên đè lên file chung
+url = https://staging.anhtester.com
+base.uri = https://staging.anhtester.com/api/v1
+```
+
+> **Vì sao tách hai tầng file:** file chung giữ những gì mọi môi trường đều giống nhau, file môi trường **chỉ khai báo phần khác biệt**. Copy nguyên bộ key sang từng file môi trường là sớm muộn cũng lệch nhau — sửa `explicit_wait_timeout` ở `config.properties` mà quên sửa ở `dev.properties`, test chạy dev lại dùng giá trị cũ.
+
+### Thứ tự ưu tiên khi lấy một giá trị cấu hình
+
+`ParameterManager.getConfigValue(name, defaultValue)` — trên đè dưới:
+
+| # | Nguồn | Ví dụ |
+| :-- | :--- | :--- |
+| 1 | System property (Maven / JVM) | `mvn test -Dbrowser=firefox` |
+| 2 | Biến môi trường (`name` rồi `NAME`) | `BROWSER=firefox` — dùng cho CI/CD |
+| 3 | File properties | `browser = firefox` trong `config.properties` |
+| 4 | `<parameter>` trong suite XML của luồng đang chạy | `<parameter name="browser" value="edge"/>` |
+| 5 | `defaultValue` truyền vào | `"chrome"` |
+
+```java
+public static String getBrowser() {
+   return getConfigValue("browser", "chrome");
+}
+```
+
+> **Vì sao dòng lệnh phải đứng trên file:** file `.properties` là cấu hình mặc định của dự án, được commit lên git. Chạy CI hay muốn thử nhanh một trình duyệt khác thì truyền `-Dbrowser=...` là đè được ngay mà **không phải sửa file rồi lỡ tay commit lên**.
+
+### Chọn môi trường (`env`)
+
+Riêng `env` **không** đi qua `getConfigValue()` — nó là thứ quyết định file nào được load, nên phải chốt xong **trước** lúc load. `PropertiesHelper.resolveEnv()` tìm theo thứ tự: `-Denv` → biến môi trường `env` / `ENV` → key `env` trong `config.properties`. Không khai báo ở đâu cả thì chỉ load mỗi `config.properties`.
+
+```bash
+mvn test "-Denv=dev"
+```
+
+Gõ sai tên môi trường (`-Denv=devv`) thì `loadFiles()` **ném lỗi ngay**, chứ không âm thầm trả về bộ config rỗng — vì rỗng thì test sẽ fail ở một chỗ hoàn toàn khác, rất khó lần ra nguyên nhân.
+
+### Nạp config ở đâu
+
+`BaseTest` gọi một lần duy nhất ở `@BeforeSuite`, trước khi bất kỳ driver nào được tạo:
+
+```java
+@BeforeSuite(alwaysRun = true)
+public void loadConfigFiles() {
+   PropertiesHelper.loadAllFiles();
+}
+```
+
+Sau đó `@BeforeMethod` đã có sẵn config để dựng driver:
+
+```java
+browserName = ParameterManager.getConfigValue("browser", browserName);
+boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
+```
+
+`@Optional("chrome")` của XML được truyền vào làm **giá trị cuối cùng** thay vì để cứng chuỗi `"chrome"` — nhờ vậy chạy suite Bài 28 (mỗi `<test>` một trình duyệt) vẫn đúng, mà chạy lẻ từ IDE cũng vẫn có mặc định.
+
+**Kiến thức chính:**
+
+- **`loadAllFiles()` là trạng thái static dùng chung cho cả JVM** — chỉ gọi ở `@BeforeSuite`. Gọi giữa lúc test đang chạy song song là **đổi config của mọi luồng**, không riêng luồng gọi. Cần đọc môi trường khác mà không ảnh hưởng ai thì dùng `loadFiles(env)` — hàm này trả về `Properties` độc lập, không đụng biến static nào.
+
+- **`FileInputStream` phải để biến cục bộ, không để field static.** Đây là lỗi kinh điển khi chạy song song: luồng này đóng mất stream của luồng kia giữa chừng → `IOException: Stream Closed`. Trong `PropertiesHelper` mọi stream đều nằm trong `try-with-resources` cục bộ.
+
+- **Gán vào biến static chỉ sau khi load xong hoàn toàn:**
+
+  ```java
+  Properties loaded = loadFiles(targetEnv);   //load vào biến cục bộ trước
+  currentEnv = targetEnv;
+  properties = loaded;                        //gán một lần, khi đã đủ dữ liệu
+  ```
+
+  Nếu gán `properties = new Properties()` rồi mới `load()` dần vào, luồng khác đọc đúng lúc đó sẽ nhận bộ config **đang dở dang** — thiếu key, `getValue()` trả `null`.
+
+- **`setValue()` phải mở lại đúng file đích để ghi**, không ghi thẳng biến `properties` trong bộ nhớ. Vì `properties` là bộ **đã gộp** nhiều file — `store()` nó xuống `staging.properties` là đổ hết key của file chung sang file môi trường.
+
+- **`getValue(key, defaultValue)`** trả về `defaultValue` khi key không tồn tại **hoặc để trống giá trị** (`report_path =`), tránh phải kiểm tra `null` rải rác khắp nơi.
+
+- **Ở chế độ headless, `maximize()` không có tác dụng thật** — cửa sổ co về 800x600, viewport bé làm web chuyển sang layout mobile và ẩn mất sidebar. Phải set `--window-size` ngay lúc khởi tạo options, và bỏ qua `maximize()` khi headless. Firefox lại dùng cú pháp khác: một gạch `-headless`, và `--width` / `--height` rời nhau.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -299,15 +426,25 @@ String customerName = JsonUtils.getValueFromJsonFile(ConfigData.CUSTOMER_DATA_FI
 ## ▶ Cách chạy test
 
 ### Chạy từ IDE
-- Mở file test → Click chuột phải → **Run** (chạy đơn lẻ với Chrome mặc định qua `@Optional("chrome")`)
+- Mở file test → Click chuột phải → **Run** (chạy đơn lẻ, trình duyệt lấy theo `browser` trong `config.properties`)
 - Mở file `.xml` trong `src/test/resources/suites/` → Click chuột phải → **Run As TestNG Suite** (chạy song song đúng cấu hình)
 
 ### Chạy bằng Maven
 
 ```bash
 # Chạy suite mặc định đã khai báo trong pom.xml
-# = bộ test POM chạy song song trên Firefox + Edge (Bài 28)
+# = demo đọc Properties Config của Bài 29
 mvn test
+```
+
+```bash
+# Đổi môi trường: load config.properties + dev.properties
+mvn test "-Denv=dev"
+```
+
+```bash
+# Đè cấu hình từ dòng lệnh, không cần sửa file properties
+mvn test "-Dbrowser=chrome" "-Dheadless=false"
 ```
 
 ```bash
@@ -327,7 +464,7 @@ mvn clean test
 
 > **Windows / PowerShell:** nên bọc tham số `-D...` trong dấu ngoặc kép như các ví dụ trên để tránh lỗi parse tham số.
 >
-> **Lưu ý:** chạy `-Dtest=...` là bỏ qua suite XML, nên **không có tham số `browser`** — `@Optional("chrome")` sẽ nhận giá trị mặc định và test chạy tuần tự trên Chrome.
+> **Lưu ý:** chạy `-Dtest=...` là bỏ qua suite XML, nên **không có `<parameter>` `browser`** và test chạy tuần tự. Trình duyệt lúc này lấy từ `config.properties` (hoặc `-Dbrowser=...` nếu có truyền), chỉ khi cả hai đều trống mới rơi về mặc định `chrome`.
 
 ### Kết quả test
 - Log tóm tắt: `target/surefire-reports/*.txt`
