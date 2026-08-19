@@ -1,7 +1,7 @@
 # ⚡ SeleniumTestNGParallel012026
 
 > Source code khóa học **Selenium Java 01/2026** — Anh Tester
-> Phần **chạy test song song và cấu hình framework** (Bài 28 → 29), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
+> Phần **chạy test song song và cấu hình framework** (Bài 28 → 30), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
 > Sử dụng **Selenium WebDriver 4.47** + **Java 17** + **Maven** + **TestNG 7.12**.
 
 ---
@@ -15,6 +15,7 @@
 - [Cấu trúc dự án](#-cấu-trúc-dự-án)
 - [Bài 28 — DriverManager với ThreadLocal](#-bài-28--drivermanager-với-threadlocal)
 - [Bài 29 — Properties Config đa môi trường](#-bài-29--properties-config-đa-môi-trường)
+- [Bài 30 — Excel Data cho test case](#-bài-30--excel-data-cho-test-case)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -70,7 +71,17 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    ```bash
    mvn test
    ```
-   Muốn chạy lại bộ test POM song song của Bài 28 thì đổi `<suiteXmlFile>` trong `pom.xml` sang `Suite_Bai28_DriverManager_ParallelExecution.xml`.
+   Muốn chạy bài khác thì đổi `<suiteXmlFile>` trong `pom.xml`, hoặc truyền thẳng từ dòng lệnh:
+
+   | Bài | File suite |
+   | :-- | :--- |
+   | 28 | `Suite_Bai28_DriverManager_ParallelExecution.xml` |
+   | 29 | `Suite_Bai29_PropertiesConfig.xml` *(mặc định)* |
+   | 30 | `Suite_Bai30_Excel_Data.xml` |
+
+   ```bash
+   mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
+   ```
 
 ---
 
@@ -81,6 +92,9 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | **Selenium Java**        | 4.47.0    | Tự động hóa trình duyệt web                 |
 | **TestNG**               | 7.12.0    | Framework quản lý test case + cơ chế parallel |
 | **Gson**                 | 2.14.0    | Đọc/ghi file JSON trung gian chia sẻ test data |
+| **Apache POI**           | 5.5.1     | Đọc/ghi file Excel — lấy data cho test case  |
+| **Apache POI OOXML**     | 5.5.1     | Hỗ trợ định dạng `.xlsx` + tô màu cell (`XSSF`) |
+| **Commons IO**           | 2.22.0    | Tiện ích thao tác file, đi kèm khi dùng POI  |
 | **SLF4J API**            | 2.0.18    | Logging API chuẩn                            |
 | **SLF4J Simple**         | 2.0.18    | Implementation đơn giản cho SLF4J            |
 | **Maven Surefire Plugin**| 3.5.6     | Plugin chạy test và tích hợp TestNG suite    |
@@ -99,12 +113,13 @@ SeleniumTestNGParallel012026/
 │   ├── main/java/com/anhtester/
 │   │   ├── Main.java                    # Entry point (demo)
 │   │   ├── constants/
-│   │   │   └── ConfigData.java          # Hằng số dùng chung (URL, tài khoản, tên file JSON test data)
+│   │   │   └── ConfigData.java          # Hằng số dùng chung (URL, tài khoản, tên file JSON + đường dẫn file Excel)
 │   │   ├── drivers/                     # 📌 Trọng tâm Bài 28
 │   │   │   ├── DriverManager.java       # Giữ WebDriver theo ThreadLocal — mỗi luồng một driver riêng
 │   │   │   └── ParameterManager.java    # Nguồn cấu hình duy nhất: -D > biến môi trường > properties > <parameter> XML
-│   │   ├── helpers/                     # 📌 Trọng tâm Bài 29
+│   │   ├── helpers/                     # 📌 Trọng tâm Bài 29 & 30
 │   │   │   ├── PropertiesHelper.java    # Load & đọc/ghi file .properties, chồng file môi trường lên file chung
+│   │   │   ├── ExcelHelper.java         # 📌 Bài 30: đọc/ghi file Excel theo TÊN CỘT, tô màu cell Passed/Failed
 │   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
 │   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager
@@ -124,36 +139,55 @@ SeleniumTestNGParallel012026/
 │       │   ├── locators/
 │       │   │   └── LocatorsCRM.java     # Kho locator dùng chung (giữ lại từ bài CRM)
 │       │   │
-│       │   ├── Bai28_DriverManager_Parallel/   # 📌 Bài 28: POM chạy song song
-│       │       ├── pages/                      # Page class KHÔNG nhận driver ở constructor
-│       │       │   ├── BasePage.java           # Menu điều hướng + helper xpathLiteral
+│       │   ├── Bai28_DriverManager_Parallel/  # 📌 Bài 28: POM chạy song song
+│       │   │   ├── pages/                     # Page class KHÔNG nhận driver ở constructor
+│       │   │   │   ├── BasePage.java          # Menu điều hướng + helper xpathLiteral
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 9 TC: 8 TC Login + 1 TC mẫu viết theo AAA
+│       │   │       ├── DashboardTest.java     # 4 TC thống kê Dashboard
+│       │   │       ├── CustomersTest.java     # 3 TC: thêm mới + 2 cách xóa Customer
+│       │   │       ├── ProjectsTest.java      # 2 TC: thêm mới + xóa Project
+│       │   │       └── TasksTest.java         # 1 TC: thêm Task gắn với Project
+│       │   │
+│       │   ├── Bai29_PropertiesConfig/        # 📌 Bài 29: cấu hình bằng file .properties
+│       │   │   └── DemoPropertiesConfig.java  # Demo load config chung + config theo môi trường
+│       │   │
+│       │   └── Bai30_Excel_Data/              # 📌 Bài 30: lấy data test từ file Excel
+│       │       ├── DemoExcelData.java         # Demo đọc cell theo tên cột + ghi STATUS có tô màu
+│       │       ├── pages/                     # Copy nguyên từ Bài 28, KHÔNG sửa gì
+│       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
 │       │       │   ├── DashboardPage.java
 │       │       │   ├── CustomersPage.java
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
 │       │       └── testcases/
-│       │           ├── LoginTest.java          # 9 TC: 8 TC Login + 1 TC mẫu viết theo AAA
-│       │           ├── DashboardTest.java      # 4 TC thống kê Dashboard
-│       │           ├── CustomersTest.java      # 3 TC: thêm mới + 2 cách xóa Customer
-│       │           ├── ProjectsTest.java       # 2 TC: thêm mới + xóa Project
-│       │           └── TasksTest.java          # 1 TC: thêm Task gắn với Project
-│       │   │
-│       │   └── Bai29_PropertiesConfig/          # 📌 Bài 29: cấu hình bằng file .properties
-│       │       └── DemoPropertiesConfig.java    # Demo load config chung + config theo môi trường
+│       │           ├── LoginTest.java         # 8 TC Login — data lấy từ Excel thay vì hardcode
+│       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 28
+│       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │           └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │
 │       └── resources/
 │           ├── configs/                 # 📌 Bài 29: file cấu hình
-│           │   ├── config.properties    # Cấu hình chung: env, browser, headless, window size, timeout...
+│           │   ├── config.properties    # Cấu hình chung: env, browser, headless, đường dẫn file Excel, timeout...
 │           │   ├── dev.properties       # Key riêng của môi trường dev (url, base.uri)
 │           │   └── staging.properties   # Key riêng của môi trường staging (url, base.uri)
 │           │
 │           ├── suites/                  # TestNG Suite XML
 │           │   ├── Suite_Bai28_DriverManager_ParallelExecution.xml   # Chạy POM song song trên 2 trình duyệt
-│           │   └── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
+│           │   ├── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
+│           │   └── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
 │           │
-│           └── testdata/                # File JSON trung gian (tự sinh khi chạy test)
-│               ├── customer_data.json
+│           └── testdata/
+│               ├── crm_data.xlsx            # 📌 Bài 30: data Login — EMAIL | PASSWORD | TEST_CASE_NAME | STATUS
+│               ├── crm_customer_data.xlsx   # 📌 Bài 30: file Excel mẫu để tự thực hành thêm
+│               ├── customer_data.json       # File JSON trung gian (tự sinh khi chạy test)
 │               └── project_data.json
 │
 ├── exports/screenshots/             # Ảnh chụp màn hình do WebUI.takeScreenshot() sinh ra
@@ -282,6 +316,7 @@ headless = true
 window_size_x = 1920
 window_size_y = 1080
 explicit_wait_timeout = 10
+excel_path_crm_data = src/test/resources/testdata/crm_data.xlsx
 ```
 
 ```properties
@@ -366,6 +401,129 @@ boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
 
 ---
 
+## 📖 Bài 30 — Excel Data cho test case
+
+> Kéo data test ra khỏi code Java, gom vào file `.xlsx`. Tester không biết code vẫn thêm/sửa được bộ data, và test case chỉ còn giữ phần logic.
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `helpers/ExcelHelper.java` | Mở file Excel theo sheet, đọc cell bằng **tên cột**, ghi cell kèm tô màu theo trạng thái. |
+| `constants/ConfigData.java` | Thêm `excel_path_crm_data` — đường dẫn file Excel lấy từ `config.properties`, không hardcode trong test. |
+| `Bai30_Excel_Data/DemoExcelData.java` | Demo trần: đọc 3 dòng data, ghi 3 dòng `STATUS` để thấy màu. |
+| `Bai30_Excel_Data/testcases/LoginTest.java` | Bộ 8 TC Login của Bài 28, thay toàn bộ data hardcode bằng data đọc từ Excel. |
+
+### Thêm thư viện Apache POI
+
+```xml
+<dependency>
+   <groupId>org.apache.poi</groupId>
+   <artifactId>poi</artifactId>
+   <version>5.5.1</version>
+</dependency>
+<dependency>
+   <groupId>org.apache.poi</groupId>
+   <artifactId>poi-ooxml</artifactId>
+   <version>5.5.1</version>
+</dependency>
+```
+
+> **Vì sao cần cả hai:** `poi` chỉ xử lý được định dạng `.xls` đời cũ (HSSF). Muốn đọc `.xlsx` — định dạng thật ra là một file zip chứa XML — thì phải có thêm `poi-ooxml` (XSSF). Thiếu nó là `WorkbookFactory.create()` ném `IllegalArgumentException: Your InputStream was neither an OLE2 stream, nor an OOXML stream`.
+
+### Cấu trúc file Excel
+
+`src/test/resources/testdata/crm_data.xlsx` — sheet **`Login`**:
+
+| | A — EMAIL | B — PASSWORD | C — TEST_CASE_NAME | D — STATUS |
+| :-- | :--- | :--- | :--- | :--- |
+| **0** | *(dòng tiêu đề)* | | | |
+| **1** | admin@example.com | 123456 | testLoginCRM_Success | |
+| **2** | admin123@example.com | 123456 | testLoginFailWithEmailInvalid | |
+| **3** | admin@example.com | 123 | testLoginFailWithPasswordInvalid | |
+| **4** | *(trống)* | 123456 | testLoginFailWithEmailNull | |
+| **5** | admin@example.com | *(trống)* | testLoginFailWithPasswordNull | |
+| **6** | *(trống)* | *(trống)* | testLoginFailWithEmailAndPasswordNull | |
+| **7** | admin@ | 123456 | testLoginFailWithEmailFormatInvalid_01 | |
+| **8** | admin@example | *(trống)* | testLoginFailWithEmailFormatInvalid_02 | |
+
+> **Dòng 0 luôn là tiêu đề.** `setExcelFile()` đọc dòng này để dựng `Map<String, Integer> columns` — tên cột ánh xạ sang chỉ số cột. Nhờ vậy code gọi `getCellData("EMAIL", 1)` chứ không phải `getCellData(0, 1)`. Chèn thêm một cột vào giữa file Excel thì code **không phải sửa dòng nào**, còn đếm chỉ số bằng tay là sai hàng loạt.
+>
+> Chỉ số dòng tính từ **0** như POI, nên dòng data đầu tiên là **1** — lệch một so với số dòng nhìn thấy trong Excel (dòng 2).
+
+### Đọc data — `getCellData()`
+
+```java
+ExcelHelper excelHelper = new ExcelHelper();
+excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+
+String email = excelHelper.getCellData("EMAIL", 1);        //admin@example.com
+String password = excelHelper.getCellData("PASSWORD", 1);  //123456
+```
+
+Áp vào test case, phần data biến mất khỏi code:
+
+```java
+@Test(priority = 1)
+public void testLoginCRM_Success() {
+   ExcelHelper excelHelper = new ExcelHelper();
+   excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+   dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 1), excelHelper.getCellData("PASSWORD", 1));
+   loginPage.verifyLoginSuccess();
+}
+```
+
+> **Vì sao phải `switch (cell.getCellType())`:** Excel không lưu mọi thứ dưới dạng chuỗi. Cột `PASSWORD` gõ `123456` là Excel hiểu **số**, gọi thẳng `getStringCellValue()` sẽ ném `IllegalStateException: Cannot get a STRING value from a NUMERIC cell`. Với ô số, `ExcelHelper` ép `(long)` trước rồi mới `String.valueOf()` — không ép thì `123456` in ra thành `123456.0` và login sai mật khẩu.
+>
+> Ô ngày tháng cũng là ô NUMERIC, nên phải tách riêng bằng `DateUtil.isCellDateFormatted(cell)`, không thì `01-01-2026` trả về con số `46023`.
+
+### Ghi kết quả — `setCellData()` và màu nền
+
+```java
+excelHelper.setCellData("Passed", "STATUS", 1);          //nền xanh lá, chữ trắng đậm
+excelHelper.setCellData("Failed", "STATUS", 2);          //nền đỏ, chữ trắng đậm
+excelHelper.setCellData("SELENIUM JAVA", "STATUS", 3);   //giá trị khác -> không tô nền
+```
+
+`getStyleByStatus()` so giá trị ghi vào (không phân biệt hoa thường): `passed`/`pass` → xanh, `failed`/`fail` → đỏ, còn lại → để trắng.
+
+**Kiến thức chính:**
+
+- **Style phải cache lại, không tạo mới mỗi lần ghi.** Một workbook Excel chỉ chứa tối đa **64.000 CellStyle**. Cứ mỗi `setCellData()` mà gọi `wb.createCellStyle()` là chạy vài nghìn dòng data đã ném `The maximum number of cell styles was exceeded`. `ExcelHelper` giữ sẵn `passedStyle`, `failedStyle`, `defaultStyle` và chỉ tạo một lần.
+
+- **Đổi workbook thì style cũ vứt đi.** `CellStyle` gắn chặt với workbook sinh ra nó — gán style của workbook A cho cell của workbook B là file Excel hỏng, mở lên Excel báo lỗi repair. Vì vậy `setExcelFile()` reset cả ba biến style về `null` mỗi lần mở file mới.
+
+- **Mỗi lần `setCellData()` là ghi lại toàn bộ file.** `wb.write(fileOut)` viết đè cả workbook, không phải chỉ một cell. Ghi 100 cell là mở/đóng file 100 lần — chấp nhận được cho demo, nhưng bộ data lớn thì nên gom lại ghi một lần ở cuối.
+
+- **Ghi Excel KHÔNG an toàn khi chạy song song.** Đây là cùng một cái bẫy với file JSON ở phần dưới: file Excel là tài nguyên dùng chung cho cả máy. Hai luồng cùng `wb.write()` xuống một file là ghi đè kết quả của nhau, tệ hơn là file hỏng hẳn. **Đọc song song thì không sao** — mỗi test case tự `new ExcelHelper()` và mở stream riêng của mình, đọc xong đóng luôn. Đây là lý do `LoginTest` của Bài 30 chỉ đọc, phần ghi `STATUS` để riêng ở `DemoExcelData` chạy tuần tự.
+
+- **Đường dẫn file Excel nằm ở `config.properties`, không hardcode.** `ConfigData.excel_path_crm_data` gọi `PropertiesHelper.getValue()` ngay lúc class được nạp — an toàn vì `getValue()` tự gọi `loadAllFiles()` khi config chưa được load.
+
+### Suite của Bài 30
+
+`Suite_Bai30_Excel_Data.xml` chạy `LoginTest` **song song trên hai trình duyệt**, mỗi trình duyệt lại chạy song song **4 method** cùng lúc:
+
+```xml
+<suite name="Suite Excel Data" parallel="tests">
+   <test name="Login Test" parallel="methods" thread-count="4">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai30_Excel_Data.testcases.LoginTest"/>
+      </classes>
+   </test>
+   <test name="Login Test on Firefox" parallel="methods" thread-count="4">
+      <parameter name="browser" value="edge" />
+      ...
+   </test>
+</suite>
+```
+
+> **`parallel="tests"` lồng với `parallel="methods"`:** hai thẻ `<test>` chạy đồng thời, và bên trong mỗi `<test>` lại có 4 luồng chạy method — tổng cộng tối đa **8 trình duyệt** mở cùng lúc. Chạy được là nhờ `DriverManager` dùng `ThreadLocal` từ Bài 28, và nhờ 8 TC Login **độc lập hoàn toàn** với nhau (chỉ đọc Excel, không ghi, không phụ thuộc thứ tự).
+>
+> `priority` trong `LoginTest` **không còn tác dụng sắp thứ tự** khi chạy `parallel="methods"` — nó chỉ quyết định thứ tự đưa method vào hàng đợi, còn chạy xong lúc nào là tùy luồng.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -445,6 +603,12 @@ mvn test "-Denv=dev"
 ```bash
 # Đè cấu hình từ dòng lệnh, không cần sửa file properties
 mvn test "-Dbrowser=chrome" "-Dheadless=false"
+```
+
+```bash
+# Chạy suite của một bài khác mà không phải sửa pom.xml
+# = LoginTest của Bài 30, data lấy từ crm_data.xlsx
+mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
 ```
 
 ```bash

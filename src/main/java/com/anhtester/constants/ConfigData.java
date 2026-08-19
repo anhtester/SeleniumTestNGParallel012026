@@ -1,5 +1,7 @@
 package com.anhtester.constants;
 
+import com.anhtester.helpers.PropertiesHelper;
+
 public class ConfigData {
    public static String BASE_URL = "https://crm.anhtester.com";
    public static String LOGIN_URL = "https://crm.anhtester.com/admin/authentication";
@@ -11,4 +13,9 @@ public class ConfigData {
    public static String KEY_CUSTOMER_NAME = "customerName";
    public static String PROJECT_DATA_FILE = "project_data.json";
    public static String KEY_PROJECT_NAME = "projectName";
+
+   //File Excel dành cho data test cases
+   public static String excel_path_crm_data = PropertiesHelper.getValue("excel_path_crm_data");
+   public static String excel_path_crm_data_customer = PropertiesHelper.getValue("excel_path_crm_data_customer");
+
 }
