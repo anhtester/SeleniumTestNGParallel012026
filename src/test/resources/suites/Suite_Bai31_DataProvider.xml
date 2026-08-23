@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite DataProvider" parallel="tests" data-provider-thread-count="3">
+   <test name="Login Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai31_DataProvider.DemoDataProviderPOM">
+         </class>
+      </classes>
+   </test>
+</suite>
