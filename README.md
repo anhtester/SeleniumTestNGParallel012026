@@ -1,7 +1,7 @@
 # ⚡ SeleniumTestNGParallel012026
 
 > Source code khóa học **Selenium Java 01/2026** — Anh Tester
-> Phần **chạy test song song và cấu hình framework** (Bài 28 → 30), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
+> Phần **chạy test song song và cấu hình framework** (Bài 28 → 31), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
 > Sử dụng **Selenium WebDriver 4.47** + **Java 17** + **Maven** + **TestNG 7.12**.
 
 ---
@@ -16,6 +16,7 @@
 - [Bài 28 — DriverManager với ThreadLocal](#-bài-28--drivermanager-với-threadlocal)
 - [Bài 29 — Properties Config đa môi trường](#-bài-29--properties-config-đa-môi-trường)
 - [Bài 30 — Excel Data cho test case](#-bài-30--excel-data-cho-test-case)
+- [Bài 31 — DataProvider](#-bài-31--dataprovider)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -78,6 +79,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    | 28 | `Suite_Bai28_DriverManager_ParallelExecution.xml` |
    | 29 | `Suite_Bai29_PropertiesConfig.xml` *(mặc định)* |
    | 30 | `Suite_Bai30_Excel_Data.xml` |
+   | 31 | `Suite_Bai31_DataProvider.xml` |
 
    ```bash
    mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
@@ -117,9 +119,9 @@ SeleniumTestNGParallel012026/
 │   │   ├── drivers/                     # 📌 Trọng tâm Bài 28
 │   │   │   ├── DriverManager.java       # Giữ WebDriver theo ThreadLocal — mỗi luồng một driver riêng
 │   │   │   └── ParameterManager.java    # Nguồn cấu hình duy nhất: -D > biến môi trường > properties > <parameter> XML
-│   │   ├── helpers/                     # 📌 Trọng tâm Bài 29 & 30
+│   │   ├── helpers/                     # 📌 Trọng tâm Bài 29, 30 & 31
 │   │   │   ├── PropertiesHelper.java    # Load & đọc/ghi file .properties, chồng file môi trường lên file chung
-│   │   │   ├── ExcelHelper.java         # 📌 Bài 30: đọc/ghi file Excel theo TÊN CỘT, tô màu cell Passed/Failed
+│   │   │   ├── ExcelHelper.java         # 📌 Bài 30 & 31: đọc/ghi Excel theo TÊN CỘT, tô màu cell, trả data cho DataProvider
 │   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
 │   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager
@@ -138,6 +140,8 @@ SeleniumTestNGParallel012026/
 │       │   │   └── BaseTest.java        # @BeforeSuite load config → tạo driver theo browser/headless, quit sau mỗi test
 │       │   ├── locators/
 │       │   │   └── LocatorsCRM.java     # Kho locator dùng chung (giữ lại từ bài CRM)
+│       │   ├── dataproviders/                # 📌 Bài 31: nơi tập trung mọi @DataProvider
+│       │   │   └── DataProviderFactory.java  # Data cứng, data Excel, data lọc theo tên test case
 │       │   │
 │       │   ├── Bai28_DriverManager_Parallel/  # 📌 Bài 28: POM chạy song song
 │       │   │   ├── pages/                     # Page class KHÔNG nhận driver ở constructor
@@ -157,8 +161,26 @@ SeleniumTestNGParallel012026/
 │       │   ├── Bai29_PropertiesConfig/        # 📌 Bài 29: cấu hình bằng file .properties
 │       │   │   └── DemoPropertiesConfig.java  # Demo load config chung + config theo môi trường
 │       │   │
-│       │   └── Bai30_Excel_Data/              # 📌 Bài 30: lấy data test từ file Excel
-│       │       ├── DemoExcelData.java         # Demo đọc cell theo tên cột + ghi STATUS có tô màu
+│       │   ├── Bai30_Excel_Data/              # 📌 Bài 30: lấy data test từ file Excel
+│       │   │   ├── DemoExcelData.java         # Demo đọc cell theo tên cột + ghi STATUS có tô màu
+│       │   │   ├── pages/                     # Copy nguyên từ Bài 28, KHÔNG sửa gì
+│       │   │   │   ├── BasePage.java
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 8 TC Login — data lấy từ Excel thay vì hardcode
+│       │   │       ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │   │       ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 28
+│       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │   │
+│       │   └── Bai31_DataProvider/            # 📌 Bài 31: TestNG bơm data vào test case
+│       │       ├── DemoDataProvider.java      # Demo cơ bản: data chuỗi, data số, DataProvider song song
+│       │       ├── DemoDataProviderExcel.java # 4 kiểu lấy data Excel: cả sheet / khoảng dòng / dòng rời rạc / Hashtable
+│       │       ├── DemoDataProviderPOM.java   # Gắn DataProvider vào POM — 6 dòng data = 6 lần login
 │       │       ├── pages/                     # Copy nguyên từ Bài 28, KHÔNG sửa gì
 │       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
@@ -167,7 +189,7 @@ SeleniumTestNGParallel012026/
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
 │       │       └── testcases/
-│       │           ├── LoginTest.java         # 8 TC Login — data lấy từ Excel thay vì hardcode
+│       │           ├── LoginTest.java         # 8 TC Login — bỏ hẳn code đọc Excel, data do DataProvider bơm vào
 │       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
 │       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 28
 │       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
@@ -182,10 +204,11 @@ SeleniumTestNGParallel012026/
 │           ├── suites/                  # TestNG Suite XML
 │           │   ├── Suite_Bai28_DriverManager_ParallelExecution.xml   # Chạy POM song song trên 2 trình duyệt
 │           │   ├── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
-│           │   └── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
+│           │   ├── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
+│           │   └── Suite_Bai31_DataProvider.xml                      # DemoDataProviderPOM — bật data-provider-thread-count
 │           │
 │           └── testdata/
-│               ├── crm_data.xlsx            # 📌 Bài 30: data Login — EMAIL | PASSWORD | TEST_CASE_NAME | STATUS
+│               ├── crm_data.xlsx            # 📌 Sheet Login (Bài 30) + sheet AddCustomer (Bài 31)
 │               ├── crm_customer_data.xlsx   # 📌 Bài 30: file Excel mẫu để tự thực hành thêm
 │               ├── customer_data.json       # File JSON trung gian (tự sinh khi chạy test)
 │               └── project_data.json
@@ -524,6 +547,195 @@ excelHelper.setCellData("SELENIUM JAVA", "STATUS", 3);   //giá trị khác -> k
 
 ---
 
+## 📖 Bài 31 — DataProvider
+
+> Bài 30 đã kéo data ra file Excel, nhưng test case vẫn phải tự mở file và tự chỉ định lấy dòng nào. Bài 31 giao việc đó cho TestNG: `@DataProvider` trả về bộ data, TestNG **chạy lại method một lần cho mỗi dòng** — trong test case chỉ còn lại tham số.
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `dataproviders/DataProviderFactory.java` | Nơi tập trung mọi `@DataProvider`: data cứng, data Excel, data lọc theo tên test case. |
+| `helpers/ExcelHelper.java` | Bổ sung 4 hàm trả thẳng `Object[][]` đúng chuẩn DataProvider. |
+| `Bai31_DataProvider/DemoDataProvider.java` | Demo cơ bản: data chuỗi, data số, DataProvider chạy song song. |
+| `Bai31_DataProvider/DemoDataProviderExcel.java` | 4 kiểu lấy data Excel: cả sheet / khoảng dòng / dòng rời rạc / dạng `Hashtable`. |
+| `Bai31_DataProvider/DemoDataProviderPOM.java` | Gắn DataProvider vào POM — 6 dòng data là 6 lần login thật. |
+| `Bai31_DataProvider/testcases/LoginTest.java` | 8 TC Login của Bài 30, bỏ hẳn code đọc Excel — mỗi TC tự nhận đúng dòng data của mình. |
+
+### `@DataProvider` hoạt động thế nào
+
+```java
+@DataProvider(name = "data_provider_01")
+public Object[][] dpMethod1() {
+   return new Object[][]{
+           {"Value1", "Value2", "Value3"},
+           {"Value4", "Value5", "Value6"},
+           {"Value7", "Value8", "Value9"}
+   };
+}
+```
+
+```java
+@Test(dataProvider = "data_provider_01", dataProviderClass = DataProviderFactory.class)
+public void testDataProvider1(String username, String password, String result) {
+   System.out.println("Username is: " + username);
+}
+```
+
+- Kiểu trả về bắt buộc là **`Object[][]`** — mảng hai chiều: **mỗi dòng là một lần chạy**, mỗi cột là một tham số truyền vào method.
+- Số cột phải **bằng đúng số tham số** của method, đúng thứ tự và đúng kiểu. Lệch một chỗ là TestNG ném `MethodMatcherException: Data provider mismatch` — không phải lỗi biên dịch nên chỉ lộ ra lúc chạy.
+- Kiểu dữ liệu không nhất thiết phải là `String` — `data_provider_02` trả `int` và method nhận `int`, khớp là chạy.
+- `dataProviderClass` cho phép để DataProvider ở **class riêng**. Bỏ thuộc tính này thì TestNG chỉ tìm DataProvider trong chính class test (hoặc class cha) — đây là lỗi hay gặp nhất khi mới tách `DataProviderFactory` ra ngoài.
+
+> **Một method, nhiều test result.** Report hiện `testDataProvider1` **3 lần** chứ không phải 1. Mỗi dòng data là một kết quả độc lập: dòng 2 fail không chặn dòng 3 chạy, và tên hiển thị kèm luôn giá trị tham số để biết dòng nào hỏng.
+
+### DataProvider chạy song song
+
+```java
+@DataProvider(name = "data_provider_04", parallel = true)
+public Object[][] dataCRM() {
+   return new Object[][]{
+           {"admin@example.com", "123456"},
+           //... tổng cộng 6 dòng
+   };
+}
+```
+
+```xml
+<suite name="Suite DataProvider" parallel="tests" data-provider-thread-count="3">
+   <test name="Login Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai31_DataProvider.DemoDataProviderPOM"/>
+      </classes>
+   </test>
+</suite>
+```
+
+- `parallel = true` bật cho **các dòng data của cùng một method** chạy đồng thời — khác hẳn `parallel="methods"` (các method khác nhau chạy đồng thời). Hai tầng này độc lập và dùng chung được.
+- `data-provider-thread-count` khai báo ở thẻ `<suite>`, mặc định là **10**. Suite Bài 31 hạ xuống **3** cho đỡ nặng máy: 6 dòng data chạy 3 luồng một lượt.
+- `parallel = true` mà chạy lẻ từ IDE hoặc `-Dtest=...` (không qua suite XML) thì vẫn lấy mặc định 10 luồng — dễ mở bung 10 trình duyệt cùng lúc.
+
+> **Mỗi dòng data là một lần `@BeforeMethod`.** `BaseTest.createDriver()` chạy lại cho **từng dòng**, nên `data_provider_04` với 6 dòng là mở và đóng **6 trình duyệt**. Không đụng nhau là nhờ `ThreadLocal` của Bài 28 — mỗi luồng vẫn giữ driver riêng.
+
+### Lấy data từ Excel — 4 kiểu
+
+`ExcelHelper` bổ sung 4 hàm, khác nhau ở **phạm vi dòng** và **hình dạng data trả về**:
+
+| Hàm | Mỗi dòng trả về | Dùng khi |
+| :--- | :--- | :--- |
+| `getExcelData(path, sheet)` | Mảng các cột → method nhận **nhiều tham số** | Lấy **cả sheet** từ dòng 1 đến hết |
+| `getDataHashTable(path, sheet, startRow, endRow)` | **Một** `Hashtable<String, String>` | Lấy một **khoảng dòng** liên tiếp |
+| `getDataFromSpecificRows(path, sheet, int[] rows)` | Mảng các cột | Chỉ chạy vài dòng **rời rạc** |
+| `getDataHashTableFromSpecificRows(path, sheet, int[] rows)` | **Một** `Hashtable<String, String>` | Dòng rời rạc + lấy theo **tên cột** |
+
+`src/test/resources/testdata/crm_data.xlsx` có thêm sheet **`AddCustomer`**:
+
+| | A — COMPANY | B — VAT | C — ADDRESS | D — PHONE |
+| :-- | :--- | :--- | :--- | :--- |
+| **0** | *(dòng tiêu đề)* | | | |
+| **1** | Google | 10 | USA | 123456 |
+| **2** | Microsoft | 5 | USA | 12345 |
+| **3** | FPT | 7 | VN | 1234 |
+| **4** | NVIDIA | 15 | CHINA | 1234567 |
+| **5** | SAMSUNG | 20 | KOREA | 0986875 |
+| **6** | VIETTEL | 25.5 | VN | 099864745 |
+| **7** | VNPT | 30.7 | VN | 077547935 |
+
+**Kiểu 1 — cả sheet, method nhận từng cột làm một tham số:**
+
+```java
+@DataProvider(name = "data_provider_addcustomer_excel")
+public Object[][] dataAddCustomerFromExcel() {
+   ExcelHelper excelHelper = new ExcelHelper();
+   return excelHelper.getExcelData(ConfigData.excel_path_crm_data, "AddCustomer");
+}
+```
+
+```java
+@Test(dataProvider = "data_provider_addcustomer_excel", dataProviderClass = DataProviderFactory.class)
+public void testDataProviderAddCustomerExcel(String company, String vat, String address, String phone) { ... }
+```
+
+**Kiểu 2 — `Hashtable`, method chỉ nhận đúng 1 tham số:**
+
+```java
+Object[][] data = excelHelper.getDataHashTable(ConfigData.excel_path_crm_data, "AddCustomer", 3, 5);
+```
+
+```java
+@Test(dataProvider = "dp_addcustomer_excel_start_end", dataProviderClass = DataProviderFactory.class)
+public void testDataProviderAddCustomerExcelStartEnd(Hashtable<String, String> data) {
+   System.out.println(data.get("COMPANY"));
+}
+```
+
+> **File Excel nhiều cột thì nên dùng `Hashtable`.** Kiểu 1 buộc signature của method phải khớp **số cột và thứ tự cột** — chèn thêm một cột vào giữa file Excel là hỏng hết các method đang dùng. Kiểu 2 chỉ có một tham số duy nhất, lấy giá trị bằng **tên cột** (`data.get("COMPANY")`), thêm cột thoải mái mà không method nào phải sửa.
+>
+> Chỉ số dòng vẫn tính từ **0** và dòng 0 là tiêu đề, nên `(..., 3, 5)` là ba dòng **FPT, NVIDIA, SAMSUNG**, còn `int[]{1, 3, 4}` là **Google, FPT, NVIDIA**.
+
+### Mỗi test case tự lấy đúng dòng data của mình
+
+Đây là phần đáng giá nhất của Bài 31 — DataProvider nhận tham số `Method` do TestNG tự tiêm vào:
+
+```java
+@DataProvider(name = "data_login")
+public Object[][] dataLogin(Method method) {
+   String testCaseName = method.getName();          // TestNG tự truyền vào
+
+   ExcelHelper excelHelper = new ExcelHelper();
+   excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+
+   // Quét tìm dòng có TEST_CASE_NAME khớp tên method
+   for (int i = 1; i <= excelHelper.getLastRowNum(); i++) {
+      if (testCaseName.equals(excelHelper.getCellData("TEST_CASE_NAME", i))) {
+         Hashtable<String, String> data = new Hashtable<>();
+         data.put("EMAIL", excelHelper.getCellData("EMAIL", i));
+         data.put("PASSWORD", excelHelper.getCellData("PASSWORD", i));
+         return new Object[][]{{data}};            // 1 dòng cho TC này
+      }
+   }
+   throw new SkipException("Không tìm thấy data cho test case: " + testCaseName);
+}
+```
+
+Nhờ vậy test case sạch hẳn phần data — cả 8 TC dùng chung một DataProvider mà vẫn nhận đúng data của riêng mình:
+
+```java
+@Test(priority = 1, dataProvider = "data_login", dataProviderClass = DataProviderFactory.class)
+public void testLoginCRM_Success(Hashtable<String, String> data) {
+   dashboardPage = loginPage.loginCRM(data.get("EMAIL"), data.get("PASSWORD"));
+   loginPage.verifyLoginSuccess();
+}
+```
+
+So với Bài 30 — cùng một bộ 8 TC Login:
+
+| | Bài 30 | Bài 31 |
+| :--- | :--- | :--- |
+| Code đọc Excel | Viết lại trong **từng TC** | Nằm gọn trong `DataProviderFactory` |
+| Chọn dòng data | `getCellData("EMAIL", 1)` — **số dòng hardcode** trong code | Khớp theo cột `TEST_CASE_NAME` |
+| Chèn/xóa dòng trong Excel | Phải sửa lại số dòng ở cả 8 TC | Không đụng vào code |
+| Thiếu data | TC fail với lỗi khó hiểu | TC **Skipped** kèm thông báo rõ ràng |
+
+> **`throw new SkipException(...)` chứ không để fail.** Không tìm thấy dòng data là lỗi của **bộ data**, không phải của web đang test. Cho TC vào trạng thái **Skipped** giúp phân biệt ngay hai loại vấn đề này khi đọc report — thói quen nên giữ cho cả framework.
+
+**Kiến thức chính:**
+
+- **DataProvider chạy TRƯỚC `@BeforeMethod`.** TestNG phải gọi DataProvider trước để biết method sẽ chạy bao nhiêu lần, rồi mới chạy `@BeforeMethod` cho từng lần. Nghĩa là trong DataProvider **chưa có driver** — gọi `DriverManager.getDriver()` ở đó là `null`. Data phải lấy từ file, DB hoặc API, không lấy từ trình duyệt.
+
+- **Ô số đọc ra bị kèm `.0`.** `getExcelData()` xử lý ô NUMERIC bằng `String.valueOf(cell.getNumericCellValue())`, nên cột `VAT` gõ `20` trả về chuỗi `"20.0"`. Đó là lý do demo phải `Double.parseDouble(vat)` trước khi tính toán — so sánh chuỗi thẳng là sai. Ngược lại, `getCellData()` của Bài 30 ép `(long)` nên `25.5` bị cắt còn `"25"`. Cột có số thập phân thì nên để Excel định dạng **Text**, hoặc đọc qua `getExcelData()`.
+
+- **Ô trống làm `getExcelData()` ném NPE.** Cell chưa từng được gõ thì `row.getCell(j)` trả về `null`, mà hàm gọi thẳng `cell.getCellType()`. Sheet `AddCustomer` điền đủ nên không dính, nhưng sheet `Login` có nhiều ô trống cố ý — đó là lý do `data_login` dùng `getCellData()` (đã bọc `try/catch` trả `""`) thay vì `getExcelData()`.
+
+- **`System.out.println(data)` với mảng là vô nghĩa.** Nó chỉ in ra `[[Ljava.lang.Object;@1b6d3586`. Muốn xem data thật sự lấy được gì thì dùng `Arrays.deepToString(data)`.
+
+- **`priority` không còn sắp thứ tự khi bật parallel** — giống Bài 30. Trong `Suite_Bai31_DataProvider.xml`, `priority = 1` của `testLoginCRM_Success` chỉ quyết định thứ tự đưa method vào hàng đợi.
+
+- **DataProvider chỉ nên đọc file, đừng ghi.** Nhiều luồng cùng gọi một DataProvider có `parallel = true`; ghi ngược xuống Excel là dính đúng cái bẫy tranh chấp file đã nói ở Bài 30.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -609,6 +821,11 @@ mvn test "-Dbrowser=chrome" "-Dheadless=false"
 # Chạy suite của một bài khác mà không phải sửa pom.xml
 # = LoginTest của Bài 30, data lấy từ crm_data.xlsx
 mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
+```
+
+```bash
+# = DemoDataProviderPOM của Bài 31, 6 dòng data chạy 3 luồng một lượt
+mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai31_DataProvider.xml"
 ```
 
 ```bash
