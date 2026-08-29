@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite Video Record" parallel="none" data-provider-thread-count="3">
+   <test name="Login Test" parallel="none">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai32_Screenshot_VideoRecord.testcases.CustomersTest">
+         </class>
+      </classes>
+   </test>
+</suite>

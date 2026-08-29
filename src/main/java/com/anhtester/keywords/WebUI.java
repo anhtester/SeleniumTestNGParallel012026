@@ -1,6 +1,7 @@
 package com.anhtester.keywords;
 
 import com.anhtester.drivers.DriverManager;
+import com.anhtester.helpers.CaptureHelper;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.*;
@@ -393,6 +394,7 @@ public class WebUI {
    public static void clickElement(By by) {
       waitForElementClickable(by);
       sleep(STEP_TIME);
+      CaptureHelper.captureScreenshot("clickElement");
       //Tìm lại element ngay trước khi click, và thử lại nếu node bị thay mới đúng lúc đó
       retryUntil(_driver -> {
          _driver.findElement(by).click();
@@ -404,6 +406,7 @@ public class WebUI {
    public static void clickElement(By by, int timeout) {
       waitForElementClickable(by, timeout);
       sleep(STEP_TIME);
+      CaptureHelper.captureScreenshot("clickElement");
       retryUntil(_driver -> {
          _driver.findElement(by).click();
          return true;
@@ -427,6 +430,7 @@ public class WebUI {
          return true;
       });
       logConsole("Set text " + value + " on element " + by);
+      CaptureHelper.captureScreenshot("setText");
    }
 
    public static void setTextAndKey(By by, String value, Keys key) {

@@ -18,4 +18,6 @@ public class ConfigData {
    public static String excel_path_crm_data = PropertiesHelper.getValue("excel_path_crm_data");
    public static String excel_path_crm_data_customer = PropertiesHelper.getValue("excel_path_crm_data_customer");
 
+   public static String SCREENSHOT_PATH = PropertiesHelper.getValue("SCREENSHOT_PATH");
+   public static String VIDEO_RECORD_PATH = PropertiesHelper.getValue("VIDEO_RECORD_PATH");
 }

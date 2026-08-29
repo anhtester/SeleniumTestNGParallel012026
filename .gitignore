@@ -29,3 +29,7 @@ out/
 .agents/
 CLAUDE.md
 AGENTS.md
+exports/
+reports/
+screenshots/
+logs/
