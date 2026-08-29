@@ -1,7 +1,7 @@
 # ⚡ SeleniumTestNGParallel012026
 
 > Source code khóa học **Selenium Java 01/2026** — Anh Tester
-> Phần **chạy test song song và cấu hình framework** (Bài 28 → 32), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
+> Phần **chạy test song song và cấu hình framework** (Bài 28 → 33), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
 > Sử dụng **Selenium WebDriver 4.48** + **Java 17** + **Maven** + **TestNG 7.12**.
 
 ---
@@ -18,6 +18,7 @@
 - [Bài 30 — Excel Data cho test case](#-bài-30--excel-data-cho-test-case)
 - [Bài 31 — DataProvider](#-bài-31--dataprovider)
 - [Bài 32 — Screenshot và Record Video](#-bài-32--screenshot-và-record-video)
+- [Bài 33 — TestListener](#-bài-33--testlistener)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -82,6 +83,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    | 30 | `Suite_Bai30_Excel_Data.xml` |
    | 31 | `Suite_Bai31_DataProvider.xml` |
    | 32 | `Suite_Bai32_Screenshot_VideoRecord.xml` |
+   | 33 | `Suite_Bai33_TestListener.xml` |
 
    ```bash
    mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
@@ -118,7 +120,7 @@ SeleniumTestNGParallel012026/
 │   ├── main/java/com/anhtester/
 │   │   ├── Main.java                    # Entry point (demo)
 │   │   ├── constants/
-│   │   │   └── ConfigData.java          # Hằng số dùng chung (URL, tài khoản, tên file JSON, đường dẫn Excel + đường dẫn ảnh/video)
+│   │   │   └── ConfigData.java          # Hằng số dùng chung (URL, tài khoản, JSON, Excel, đường dẫn ảnh/video + công tắc bật/tắt)
 │   │   ├── drivers/                     # 📌 Trọng tâm Bài 28
 │   │   │   ├── DriverManager.java       # Giữ WebDriver theo ThreadLocal — mỗi luồng một driver riêng
 │   │   │   └── ParameterManager.java    # Nguồn cấu hình duy nhất: -D > biến môi trường > properties > <parameter> XML
@@ -128,7 +130,7 @@ SeleniumTestNGParallel012026/
 │   │   │   ├── CaptureHelper.java       # 📌 Bài 32: chụp màn hình (TakesScreenshot) + quay video (Monte Screen Recorder)
 │   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
-│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, tự chụp ảnh ở click/setText (Bài 32)
+│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, chụp ảnh theo SCREENSHOT_ALL_STEPS
 │   │   │   ├── ActionKeyword.java       # Lớp keyword đời đầu (giữ lại từ các bài trước, không còn dùng)
 │   │   │   ├── MobileUI.java            # (placeholder) Keyword cho Mobile Automation — Appium
 │   │   │   └── APIKeyword.java          # (placeholder) Keyword cho API Automation — REST Assured
@@ -140,9 +142,11 @@ SeleniumTestNGParallel012026/
 │   └── test/
 │       ├── java/com/anhtester/
 │       │   ├── common/
-│       │   │   └── BaseTest.java        # @BeforeSuite load config → tạo driver theo browser/headless, quit sau mỗi test
+│       │   │   └── BaseTest.java        # @Listeners gắn TestListener (Bài 33) + tạo driver theo browser/headless, tắt popup trình duyệt
 │       │   ├── locators/
 │       │   │   └── LocatorsCRM.java     # Kho locator dùng chung (giữ lại từ bài CRM)
+│       │   ├── listeners/                    # 📌 Bài 33: nghe sự kiện của TestNG
+│       │   │   └── TestListener.java         # Tự chụp ảnh khi pass/fail, tự quay video theo công tắc config
 │       │   ├── dataproviders/                # 📌 Bài 31: nơi tập trung mọi @DataProvider
 │       │   │   └── DataProviderFactory.java  # Data cứng, data Excel, data lọc theo tên test case
 │       │   │
@@ -198,10 +202,25 @@ SeleniumTestNGParallel012026/
 │       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │   │
-│       │   └── Bai32_Screenshot_VideoRecord/  # 📌 Bài 32: chụp màn hình & quay video
-│       │       ├── DemoScreenshot.java        # 3 cách chụp: hardcode tên / theo tên method / gọi CaptureHelper + @AfterMethod chụp khi PASS
-│       │       ├── DemoVideoRecord.java       # Class trống — chỗ để tự thực hành quay video
-│       │       ├── pages/                     # Copy nguyên từ Bài 31, KHÔNG sửa gì
+│       │   ├── Bai32_Screenshot_VideoRecord/  # 📌 Bài 32: chụp màn hình & quay video
+│       │   │   ├── DemoScreenshot.java        # 3 cách chụp: hardcode tên / theo tên method / gọi CaptureHelper + @AfterMethod chụp khi PASS
+│       │   │   ├── DemoVideoRecord.java       # Class trống — chỗ để tự thực hành quay video
+│       │   │   ├── pages/                     # Copy nguyên từ Bài 31, KHÔNG sửa gì
+│       │   │   │   ├── BasePage.java
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 8 TC Login — 2 TC đầu có quay video
+│       │   │       ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │   │       ├── CustomersTest.java     # 3 TC — cả 3 đều quay video (start ở @Test, stop ở @AfterMethod)
+│       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │   │
+│       │   └── Bai33_TestListener/            # 📌 Bài 33: TestListener làm hết, test case sạch
+│       │       ├── pages/                     # Copy từ Bài 32 — DashboardPage đã gỡ lời gọi chụp ảnh
 │       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
 │       │       │   ├── DashboardPage.java
@@ -209,15 +228,15 @@ SeleniumTestNGParallel012026/
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
 │       │       └── testcases/
-│       │           ├── LoginTest.java         # 8 TC Login — 2 TC đầu có quay video
+│       │           ├── LoginTest.java         # 8 TC Login — bỏ hết code chụp/quay, có 1 TC cố tình fail
 │       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
-│       │           ├── CustomersTest.java     # 3 TC — cả 3 đều quay video (start ở @Test, stop ở @AfterMethod)
+│       │           ├── CustomersTest.java     # 3 TC — bỏ hết code chụp/quay
 │       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │           └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │
 │       └── resources/
 │           ├── configs/                 # 📌 Bài 29: file cấu hình
-│           │   ├── config.properties    # Cấu hình chung: env, browser, headless, đường dẫn file Excel, timeout...
+│           │   ├── config.properties    # Cấu hình chung: env, browser, headless, Excel, timeout + 4 công tắc ảnh/video (Bài 33)
 │           │   ├── dev.properties       # Key riêng của môi trường dev (url, base.uri)
 │           │   └── staging.properties   # Key riêng của môi trường staging (url, base.uri)
 │           │
@@ -226,7 +245,8 @@ SeleniumTestNGParallel012026/
 │           │   ├── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
 │           │   ├── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
 │           │   ├── Suite_Bai31_DataProvider.xml                      # DemoDataProviderPOM — bật data-provider-thread-count
-│           │   └── Suite_Bai32_Screenshot_VideoRecord.xml            # CustomersTest có quay video — bắt buộc parallel="none"
+│           │   ├── Suite_Bai32_Screenshot_VideoRecord.xml            # CustomersTest có quay video — bắt buộc parallel="none"
+│           │   └── Suite_Bai33_TestListener.xml                      # LoginTest — listener gắn ở BaseTest, <listeners> XML để comment
 │           │
 │           └── testdata/
 │               ├── crm_data.xlsx            # 📌 Sheet Login (Bài 30) + sheet AddCustomer (Bài 31)
@@ -441,7 +461,7 @@ boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
 
 - **`setValue()` phải mở lại đúng file đích để ghi**, không ghi thẳng biến `properties` trong bộ nhớ. Vì `properties` là bộ **đã gộp** nhiều file — `store()` nó xuống `staging.properties` là đổ hết key của file chung sang file môi trường.
 
-- **`getValue(key, defaultValue)`** trả về `defaultValue` khi key không tồn tại **hoặc để trống giá trị** (`report_path =`), tránh phải kiểm tra `null` rải rác khắp nơi.
+- **`getValue(key, defaultValue)`** trả về `defaultValue` khi key không tồn tại **hoặc để trống giá trị** (kiểu `report_path =`), tránh phải kiểm tra `null` rải rác khắp nơi. Bản một tham số `getValue(key)` thì trả thẳng `null` — gọi `.equalsIgnoreCase()` lên đó là NPE, xem lưu ý ở [Bài 33](#-bài-33--testlistener).
 
 - **Ở chế độ headless, `maximize()` không có tác dụng thật** — cửa sổ co về 800x600, viewport bé làm web chuyển sang layout mobile và ẩn mất sidebar. Phải set `--window-size` ngay lúc khởi tạo options, và bỏ qua `maximize()` khi headless. Firefox lại dùng cú pháp khác: một gạch `-headless`, và `--width` / `--height` rời nhau.
 
@@ -857,10 +877,10 @@ public static void clickElement(By by) {
 }
 ```
 
-> **Cách này chụp MỌI bước của MỌI test case.** Chạy hết bộ POM là ra hàng trăm tấm ảnh và test chậm đi thấy rõ (mỗi lần chụp mất vài trăm ms). Trong `config.properties` đã có sẵn 3 key `screenshot_all_steps`, `screenshot_fail_steps`, `screenshot_pass_steps` — nhưng **`WebUI` chưa đọc tới**, nên hiện tại là chụp vô điều kiện. Muốn dùng thật thì bọc lại:
+> **Ở Bài 32, cách này chụp MỌI bước của MỌI test case.** Chạy hết bộ POM là ra hàng trăm tấm ảnh và test chậm đi thấy rõ (mỗi lần chụp mất vài trăm ms). **Bài 33 đã sửa lại**: bọc trong công tắc `SCREENSHOT_ALL_STEPS` và dời lời gọi xuống **sau** thao tác — xem [Bài 33](#-bài-33--testlistener).
 >
 > ```java
-> if (Boolean.parseBoolean(PropertiesHelper.getValue("screenshot_all_steps"))) {
+> if (ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")) {
 >    CaptureHelper.captureScreenshot("clickElement");
 > }
 > ```
@@ -970,7 +990,7 @@ VIDEO_RECORD_PATH = exports/videorecords
 
 - **Quay video KHÔNG chạy song song được.** Monte quay nguyên cái desktop, nên 3 luồng chạy cùng lúc sẽ cho ra 3 file video giống hệt nhau, mỗi file đều có đủ 3 trình duyệt chồng lên nhau. Đó là lý do `Suite_Bai32_Screenshot_VideoRecord.xml` để `parallel="none"` — ngược hẳn với tinh thần Bài 28 → 31. Muốn vừa parallel vừa có video thì phải đổi hướng: mỗi luồng chạy trong một container riêng (Selenium Grid, Docker + `selenium/video`).
 
-- **`screenRecorder` là biến `static`** — cả JVM chỉ giữ được **một** recorder. TC nào quên gọi `startRecord()` mà `@AfterMethod` vẫn gọi `stopRecord()` thì hoặc dính `NullPointerException` (chưa TC nào start), hoặc **dừng nhầm/ghi đè lên video của TC trước**. Trong `LoginTest` của bài này chỉ 2/8 TC có `startRecord()` — chạy cả class là thấy ngay hiện tượng. Cách chắc ăn: kiểm tra `null` trước khi stop, hoặc đưa hẳn `startRecord()`/`stopRecord()` lên `BaseTest` cho mọi TC dùng chung.
+- **`screenRecorder` là biến `static`** — cả JVM chỉ giữ được **một** recorder. TC nào quên gọi `startRecord()` mà `@AfterMethod` vẫn gọi `stopRecord()` thì hoặc dính `NullPointerException` (chưa TC nào start), hoặc **dừng nhầm/ghi đè lên video của TC trước**. Trong `LoginTest` của bài này chỉ 2/8 TC có `startRecord()` — chạy cả class là thấy ngay hiện tượng. Đúng cái bẫy này là lý do **Bài 33 chuyển hẳn việc start/stop sang `TestListener`**, không để test case tự gọi nữa.
 
 - **`WebUI.sleep(2)` trước `stopRecord()` không phải thừa.** Recorder ghi theo khung hình, dừng ngay lập tức sau assert cuối thì khung hình quan trọng nhất (kết quả) hay bị cắt mất.
 
@@ -979,6 +999,223 @@ VIDEO_RECORD_PATH = exports/videorecords
 - **`DemoScreenshot` cố tình để lộn xộn.** Hai TC đầu lưu vào `./screenshots/`, TC thứ ba dùng `CaptureHelper` nên lưu vào `exports/screenshots/`. Đây là chủ ý minh họa đường đi từ **code thô** → **code gom vào helper**; khi viết framework thật thì chỉ giữ lại cách thứ ba.
 
 - **Suite của bài này đặt tên hơi lệch nội dung:** `<test name="Login Test">` nhưng bên trong lại chạy `CustomersTest`. Không ảnh hưởng kết quả, nhưng tên `<test>` hiện thẳng lên report nên sửa lại cho khớp thì đọc report đỡ rối.
+
+---
+
+## 📖 Bài 33 — TestListener
+
+> Bài 32 phải gọi tay `startRecord()` / `stopRecord()` / `captureScreenshot()` trong từng test case — code nghiệp vụ lẫn với code hạ tầng, và chỉ cần quên một dòng là mất bằng chứng. Bài 33 giao hết cho TestNG: viết **một** class `TestListener` nghe sự kiện, test case trở lại sạch sẽ như chưa từng có chụp ảnh quay video.
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `listeners/TestListener.java` | Implement `ITestListener` — nghe 6 sự kiện của TestNG, tự chụp ảnh và quay video theo công tắc trong config. |
+| `common/BaseTest.java` | Gắn `@Listeners({TestListener.class})` cho **mọi** class kế thừa; thêm loạt `prefs` tắt popup của Chrome/Edge. |
+| `constants/ConfigData.java` | 4 công tắc mới: `SCREENSHOT_PASSED_STEP`, `SCREENSHOT_FAILED_STEP`, `SCREENSHOT_ALL_STEPS`, `VIDEO_RECORD_ACTIVE`. |
+| `keywords/WebUI.java` | Chụp ảnh ở mức keyword giờ **có điều kiện** và chụp **sau** khi thao tác xong. |
+| `Bai33_TestListener/testcases/` | Bộ test case của Bài 32 nhưng **xóa sạch** code chụp/quay — so sánh trực tiếp thấy ngay cái được. |
+| `suites/Suite_Bai33_TestListener.xml` | Chạy `LoginTest`, phần `<listeners>` để **comment sẵn** — minh họa cách đăng ký thứ hai. |
+
+### `ITestListener` — nghe những sự kiện gì
+
+```java
+public class TestListener implements ITestListener {
+
+   @Override
+   public void onStart(ITestContext result) { ... }        // vào thẻ <test> trong XML
+
+   @Override
+   public void onTestStart(ITestResult result) { ... }     // trước mỗi @Test
+
+   @Override
+   public void onTestSuccess(ITestResult result) { ... }   // TC pass
+
+   @Override
+   public void onTestFailure(ITestResult result) { ... }   // TC fail
+   @Override
+   public void onTestSkipped(ITestResult result) { ... }   // TC bị skip
+
+   @Override
+   public void onFinish(ITestContext result) { ... }       // hết thẻ <test>
+}
+```
+
+> **`ITestContext` khác `ITestResult`.** `onStart`/`onFinish` nhận `ITestContext` — phạm vi cả thẻ `<test>`, có `getStartDate()`, `getEndDate()`, `getPassedTests()`, `getFailedTests()`. Bốn callback còn lại nhận `ITestResult` — phạm vi **một** test case, có `getName()`, `getStatus()`, `getThrowable()`.
+>
+> `ITestListener` còn vài callback nữa ít dùng, đáng nhớ nhất là `onTestFailedButWithinSuccessPercentage()` (dùng chung với `successPercentage` của `@Test`). Không override thì TestNG dùng bản mặc định rỗng.
+
+**Thứ tự chạy thực tế** (chạy thử một class có đủ annotation sẽ in ra đúng như vậy):
+
+```
+onStart
+  @BeforeClass
+    @BeforeMethod          ← driver được tạo ở đây
+    onTestStart            ← startRecord()
+      (thân test case)
+    onTestSuccess / onTestFailure / onTestSkipped   ← captureScreenshot(), stopRecord()
+    @AfterMethod           ← driver bị quit ở đây
+  @AfterClass
+onFinish
+```
+
+> **Đây là điểm mấu chốt khiến listener làm được việc:** callback kết quả chạy **sau** khi test case xong nhưng **trước** `@AfterMethod`. Nhờ vậy lúc `onTestFailure` chụp màn hình thì driver **vẫn còn sống** — đúng khoảnh khắc màn hình đang hiển thị lỗi. Đảo lại thứ tự (chụp trong `@AfterMethod` đặt sau `closeDriver()`) là dính `NoSuchSessionException`.
+
+### Nội dung `TestListener`
+
+```java
+@Override
+public void onTestStart(ITestResult result) {
+   System.out.println("Bắt đầu chạy test case: " + result.getName());
+   if (ConfigData.VIDEO_RECORD_ACTIVE.equalsIgnoreCase("true")) {
+      CaptureHelper.startRecord(result.getName());
+   }
+}
+
+@Override
+public void onTestSuccess(ITestResult result) {
+   System.out.println("Test case " + result.getName() + " is passed.");
+   if (ConfigData.SCREENSHOT_PASSED_STEP.equalsIgnoreCase("true")) {
+      CaptureHelper.captureScreenshot(result.getName());
+   }
+   if (ConfigData.VIDEO_RECORD_ACTIVE.equalsIgnoreCase("true")) {
+      WebUI.sleep(2);
+      CaptureHelper.stopRecord();
+   }
+}
+
+@Override
+public void onTestFailure(ITestResult result) {
+   System.out.println("Test case " + result.getName() + " is failed.");
+   System.out.println("==> Nguồn gốc Fail: " + result.getThrowable());   // in ra exception gốc
+   if (ConfigData.SCREENSHOT_FAILED_STEP.equalsIgnoreCase("true")) {
+      CaptureHelper.captureScreenshot(result.getName());
+   }
+   ...
+}
+```
+
+> **`result.getThrowable()` là thứ đáng giá nhất trong `ITestResult`.** Nó trả về đúng exception làm TC fail — `AssertionError` với thông báo so sánh, hay `TimeoutException` khi chờ element. In ra đây là có ngay dòng đầu tiên để đọc khi mở log, không phải lội ngược lên tìm.
+
+### Hai cách đăng ký listener
+
+```java
+// Cách 1 — gắn vào BaseTest: mọi class kế thừa BaseTest đều tự có, không phải khai báo lại
+@Listeners({TestListener.class})
+public class BaseTest { ... }
+```
+
+```xml
+<!-- Cách 2 — khai báo trong Suite XML: áp cho toàn bộ suite, đổi listener không cần build lại -->
+<listeners>
+   <listener class-name="com.anhtester.listeners.TestListener"></listener>
+</listeners>
+```
+
+Trong `Suite_Bai33_TestListener.xml`, khối `<listeners>` đang **để comment** vì `BaseTest` đã gắn `@Listeners` rồi.
+
+> **Đừng đăng ký cả hai chỗ cùng lúc.** Listener rất dễ bị gọi **hai lần** cho một sự kiện — hệ quả là mỗi TC ra 2 tấm ảnh, và tệ hơn: `startRecord()` chạy 2 lần đè lên biến `static screenRecorder`, `stopRecord()` chỉ dừng được cái sau, cái trước treo lại. Chọn một chỗ và giữ nguyên.
+>
+> Cách 3 (không dùng trong bài này) là `ServiceLoader` — đặt tên class vào `META-INF/services/org.testng.ITestNGListener`, listener tự động áp cho mọi lần chạy mà không cần khai báo ở đâu cả.
+
+### 4 công tắc trong `config.properties`
+
+```properties
+SCREENSHOT_PATH = exports/screenshots
+VIDEO_RECORD_PATH = exports/videorecords
+SCREENSHOT_PASSED_STEP = false      # chụp khi TC pass
+SCREENSHOT_FAILED_STEP = true       # chụp khi TC fail — cái cần nhất, để mặc định bật
+SCREENSHOT_ALL_STEPS = false        # chụp MỌI bước (click, setText, getText, assert)
+VIDEO_RECORD_ACTIVE = false         # quay video cả phiên chạy
+```
+
+Bốn key này thay cho `record_video` / `screenshot_all_steps` / `screenshot_fail_steps` / `screenshot_pass_steps` của các bài trước (key `report_path` bỏ hẳn). `ConfigData` đọc lên thành hằng số để cả framework dùng chung:
+
+```java
+public static String SCREENSHOT_PASSED_STEP = PropertiesHelper.getValue("SCREENSHOT_PASSED_STEP");
+public static String SCREENSHOT_FAILED_STEP = PropertiesHelper.getValue("SCREENSHOT_FAILED_STEP");
+public static String SCREENSHOT_ALL_STEPS = PropertiesHelper.getValue("SCREENSHOT_ALL_STEPS");
+public static String VIDEO_RECORD_ACTIVE = PropertiesHelper.getValue("VIDEO_RECORD_ACTIVE");
+```
+
+### `WebUI` — chụp có điều kiện và chụp ĐÚNG lúc
+
+```java
+public static void clickElement(By by) {
+   waitForElementClickable(by);
+   sleep(STEP_TIME);
+   retryUntil(_driver -> {
+      _driver.findElement(by).click();
+      return true;
+   });
+   logConsole("Click on element " + by);
+
+   if (ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")) {
+      CaptureHelper.captureScreenshot("clickElement");
+   }
+}
+```
+
+Hai thay đổi so với Bài 32:
+
+- **Có công tắc** `SCREENSHOT_ALL_STEPS` — mặc định `false`, không còn chụp vô điều kiện làm chậm cả bộ test.
+- **Chụp SAU khi thao tác**, không phải trước. Chụp trước cú click chỉ thấy trang cũ; chụp sau mới thấy **kết quả** của cú click — đúng thứ cần khi dò lỗi.
+
+Danh sách keyword có chụp: `clickElement()` (2 overload), `setText()`, `setTextAndKey()`, `getElementText()`, `checkEquals()`, `checkContains()`.
+
+### Test case sạch trở lại
+
+| Bài 32 | Bài 33 |
+| :--- | :--- |
+| `@AfterMethod { WebUI.sleep(2); CaptureHelper.stopRecord(); }` trong từng class | không còn — listener lo |
+| `CaptureHelper.startRecord("testAddNewCustomer");` ở dòng đầu mỗi `@Test` | không còn — listener lo |
+| `DashboardPage` gọi `captureScreenshot("Dashboard Page")` ngay trong page class | đã gỡ bỏ |
+| Bật/tắt = sửa code, build lại | Bật/tắt = sửa `config.properties` |
+
+`Bai33_TestListener/testcases/LoginTest.java` có một TC **cố tình fail** để xem `onTestFailure` chạy:
+
+```java
+loginPage.verifyLoginFail("Invalid email or password 123");   // web trả về chuỗi không có " 123"
+```
+
+### `BaseTest` — tắt popup của trình duyệt
+
+Bài 33 thêm vào `ChromeOptions` / `EdgeOptions` một loạt `prefs`:
+
+```java
+Map<String, Object> prefs = new HashMap<String, Object>();
+prefs.put("profile.default_content_setting_values.notifications", 2);  // chặn xin quyền thông báo
+prefs.put("profile.password_manager_leak_detection", false);           // tắt "đổi mật khẩu ngay"
+prefs.put("credentials_enable_service", false);
+prefs.put("profile.password_manager_enabled", false);                  // tắt "lưu mật khẩu?"
+prefs.put("autofill.profile_enabled", false);                          // tắt "lưu địa chỉ?"
+options.setExperimentalOption("prefs", prefs);
+options.addArguments("--disable-extensions");
+options.addArguments("--disable-infobars");
+options.addArguments("--disable-notifications");
+options.addArguments("--remote-allow-origins=*");
+options.setAcceptInsecureCerts(true);
+```
+
+> **Vì sao đặt đúng vào bài này:** popup "Save password?" của Chrome nhảy ra ngay sau khi login — nó **che element** làm TC fail vô cớ, và tấm ảnh listener chụp được lại dính nguyên cái popup thay vì nội dung trang. Tắt từ lúc khởi tạo driver là gọn nhất.
+>
+> `setAcceptInsecureCerts(true)` cho phép chạy trên site có chứng chỉ SSL tự ký — hay gặp ở môi trường staging nội bộ.
+
+**Kiến thức chính:**
+
+- **Listener chạy trước `@AfterMethod`, sau `@BeforeMethod`** — nhờ vậy driver luôn còn sống trong mọi callback. Đây là lý do mô hình "listener chụp ảnh khi fail" là chuẩn mực của gần như mọi framework Selenium, chứ không phải chụp trong `@AfterMethod`.
+
+- **`ConfigData.X.equalsIgnoreCase("true")` sẽ ném `NullPointerException` nếu thiếu key.** `PropertiesHelper.getValue(key)` trả `null` khi không tìm thấy, mà `null.equalsIgnoreCase(...)` là NPE ngay từ `onTestStart` — hỏng cả suite chỉ vì gõ sai một dòng trong file properties. An toàn hơn thì đảo vế (`"true".equalsIgnoreCase(ConfigData.X)`) hoặc dùng bản 2 tham số `getValue("VIDEO_RECORD_ACTIVE", "false")` đã có sẵn từ Bài 29.
+
+- **`ConfigData` là `static` nên chỉ đọc config MỘT lần**, đúng lúc class được nạp. Bốn công tắc này đọc thẳng `PropertiesHelper.getValue()` chứ **không đi qua** `ParameterManager.getConfigValue()` của Bài 29 — nghĩa là `mvn test "-DVIDEO_RECORD_ACTIVE=true"` **không có tác dụng**, phải sửa file `config.properties`. Muốn đè được từ dòng lệnh thì đổi sang `ParameterManager.getConfigValue("VIDEO_RECORD_ACTIVE", "false")`.
+
+- **Listener không cứu được chuyện quay video song song.** `CaptureHelper.screenRecorder` vẫn là biến `static` và Monte vẫn quay cả màn hình desktop — bật `VIDEO_RECORD_ACTIVE = true` rồi chạy `parallel="methods"` là các luồng giẫm lên recorder của nhau. Đó là lý do `Suite_Bai33_TestListener.xml` vẫn để `parallel="none"` (thuộc tính `thread-count="4"` trong suite chỉ có tác dụng khi `parallel` khác `none`).
+
+- **Listener nhận cùng một `ITestResult` mà `@AfterMethod` nhận.** Nếu muốn dùng lại các `@AfterMethod(ITestResult result)` đã viết ở Bài 32, chỉ cần nhớ: cùng dữ liệu, khác thời điểm — và chọn **một** trong hai chỗ để làm, đừng làm cả hai.
+
+- **`ITestListener` chỉ nghe, không sửa được luồng chạy.** Muốn can thiệp sâu hơn thì dùng interface khác: `IRetryAnalyzer` (chạy lại TC fail), `IAnnotationTransformer` (gắn retry cho mọi `@Test` mà không sửa code), `IInvokedMethodListener` (nghe cả các method `@Before...`/`@After...`), `ISuiteListener` (phạm vi cả suite thay vì từng thẻ `<test>`).
+
+- **`import com.anhtester.listeners.TestListener;` trong `Bai33_TestListener/testcases/LoginTest.java` là import thừa** — class đó không dùng tới `TestListener` vì `@Listeners` đã nằm ở `BaseTest`. Xóa đi cho gọn.
 
 ---
 
@@ -1080,6 +1317,11 @@ mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai32_Screens
 ```
 
 ```bash
+# = LoginTest của Bài 33, TestListener tự chụp ảnh khi fail (có 1 TC cố tình fail để xem)
+mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai33_TestListener.xml"
+```
+
+```bash
 # Chạy một class cụ thể (tuần tự, Chrome mặc định)
 mvn test "-Dtest=CustomersTest"
 ```
@@ -1102,7 +1344,9 @@ mvn clean test
 - Log tóm tắt: `target/surefire-reports/*.txt`
 - Báo cáo HTML của TestNG: `target/surefire-reports/index.html`
 - Ảnh chụp màn hình: `exports/screenshots/`
-- Video quay màn hình: `exports/videorecords/` (chỉ có khi TC gọi `CaptureHelper.startRecord()`)
+- Video quay màn hình: `exports/videorecords/` (chỉ có khi bật `VIDEO_RECORD_ACTIVE = true`)
+
+> Từ Bài 33, việc chụp ảnh / quay video do `TestListener` lo — bật tắt bằng 4 key `SCREENSHOT_PASSED_STEP`, `SCREENSHOT_FAILED_STEP`, `SCREENSHOT_ALL_STEPS`, `VIDEO_RECORD_ACTIVE` trong `config.properties`, không phải sửa code.
 
 ---
 

@@ -4,6 +4,7 @@ import com.anhtester.constants.ConfigData;
 import com.anhtester.drivers.DriverManager;
 import com.anhtester.drivers.ParameterManager;
 import com.anhtester.helpers.PropertiesHelper;
+import com.anhtester.listeners.TestListener;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -11,14 +12,13 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
+import org.testng.annotations.*;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
+@Listeners({TestListener.class})
 public class BaseTest {
 
    @BeforeSuite(alwaysRun = true)
@@ -68,6 +68,20 @@ public class BaseTest {
 
    private ChromeOptions getChromeOptions(boolean headless) {
       ChromeOptions options = new ChromeOptions();
+
+      Map<String, Object> prefs = new HashMap<String, Object>();
+      prefs.put("profile.default_content_setting_values.notifications", 2); //Block notifications from website
+      prefs.put("profile.password_manager_leak_detection", false); // Turn off change your password
+      prefs.put("credentials_enable_service", false);
+      prefs.put("profile.password_manager_enabled", false);
+      prefs.put("autofill.profile_enabled", false); //Turn off Save Address popup
+      options.setExperimentalOption("prefs", prefs);
+      options.addArguments("--disable-extensions");
+      options.addArguments("--disable-infobars");
+      options.addArguments("--disable-notifications");
+      options.addArguments("--remote-allow-origins=*");
+      options.setAcceptInsecureCerts(true);
+
       if (headless) {
          options.addArguments("--headless=new");
          options.addArguments("--window-size=" + getWindowSize());
@@ -78,6 +92,20 @@ public class BaseTest {
 
    private EdgeOptions getEdgeOptions(boolean headless) {
       EdgeOptions options = new EdgeOptions();
+
+      Map<String, Object> prefs = new HashMap<String, Object>();
+      prefs.put("profile.default_content_setting_values.notifications", 2);
+      prefs.put("profile.password_manager_leak_detection", false); // Turn off change your password
+      prefs.put("credentials_enable_service", false);
+      prefs.put("profile.password_manager_enabled", false);
+      prefs.put("autofill.profile_enabled", false); //Turn off Save Address popup
+      options.setExperimentalOption("prefs", prefs);
+      options.addArguments("--disable-extensions");
+      options.addArguments("--disable-infobars");
+      options.addArguments("--disable-notifications");
+      options.addArguments("--remote-allow-origins=*");
+      options.setAcceptInsecureCerts(true);
+
       if (headless) {
          options.addArguments("--headless=new");
          options.addArguments("--window-size=" + getWindowSize());

@@ -20,4 +20,9 @@ public class ConfigData {
 
    public static String SCREENSHOT_PATH = PropertiesHelper.getValue("SCREENSHOT_PATH");
    public static String VIDEO_RECORD_PATH = PropertiesHelper.getValue("VIDEO_RECORD_PATH");
+
+   public static String SCREENSHOT_PASSED_STEP = PropertiesHelper.getValue("SCREENSHOT_PASSED_STEP");
+   public static String SCREENSHOT_FAILED_STEP = PropertiesHelper.getValue("SCREENSHOT_FAILED_STEP");
+   public static String SCREENSHOT_ALL_STEPS = PropertiesHelper.getValue("SCREENSHOT_ALL_STEPS");
+   public static String VIDEO_RECORD_ACTIVE = PropertiesHelper.getValue("VIDEO_RECORD_ACTIVE");
 }

@@ -1,5 +1,6 @@
 package com.anhtester.keywords;
 
+import com.anhtester.constants.ConfigData;
 import com.anhtester.drivers.DriverManager;
 import com.anhtester.helpers.CaptureHelper;
 import org.openqa.selenium.*;
@@ -394,24 +395,30 @@ public class WebUI {
    public static void clickElement(By by) {
       waitForElementClickable(by);
       sleep(STEP_TIME);
-      CaptureHelper.captureScreenshot("clickElement");
       //Tìm lại element ngay trước khi click, và thử lại nếu node bị thay mới đúng lúc đó
       retryUntil(_driver -> {
          _driver.findElement(by).click();
          return true;
       });
       logConsole("Click on element " + by);
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("clickElement");
+      }
    }
 
    public static void clickElement(By by, int timeout) {
       waitForElementClickable(by, timeout);
       sleep(STEP_TIME);
-      CaptureHelper.captureScreenshot("clickElement");
       retryUntil(_driver -> {
          _driver.findElement(by).click();
          return true;
       });
       logConsole("Click on element " + by);
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("clickElement");
+      }
    }
 
    /**
@@ -430,7 +437,10 @@ public class WebUI {
          return true;
       });
       logConsole("Set text " + value + " on element " + by);
-      CaptureHelper.captureScreenshot("setText");
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("setText");
+      }
    }
 
    public static void setTextAndKey(By by, String value, Keys key) {
@@ -447,6 +457,10 @@ public class WebUI {
       //waitForElementVisible(by);
       //getWebElement(by).sendKeys(value, key);
       System.out.println("Set text: " + value + " on element " + by);
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("setText");
+      }
    }
 
    public static String getElementText(By by) {
@@ -455,6 +469,11 @@ public class WebUI {
       logConsole("Get text of element " + by);
       String text = retryUntil(_driver -> _driver.findElement(by).getText());
       logConsole("==> TEXT: " + text);
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("getElementText");
+      }
+
       return text; //Trả về một giá trị kiểu String
    }
 
@@ -708,6 +727,11 @@ public class WebUI {
       } else {
          logConsole("⛔\uFE0F NOT Equals.");
       }
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("assertEquals");
+      }
+
       Assert.assertEquals(actual, expected, message);
    }
 
@@ -720,6 +744,11 @@ public class WebUI {
    public static void assertContains(String actual, String expected, String message) {
       System.out.println("Assert contains: " + actual + " and " + expected);
       boolean check = actual.contains(expected);
+
+      if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
+         CaptureHelper.captureScreenshot("assertContains");
+      }
+
       Assert.assertTrue(check, message);
    }
 

@@ -1,0 +1,16 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite TestListener" parallel="none" thread-count="4">
+
+<!--   <listeners>-->
+<!--      <listener class-name="com.anhtester.listeners.TestListener"></listener>-->
+<!--   </listeners>-->
+
+   <test name="Login Test" parallel="none">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai33_TestListener.testcases.LoginTest">
+         </class>
+      </classes>
+   </test>
+</suite>
