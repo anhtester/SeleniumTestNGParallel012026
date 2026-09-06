@@ -19,6 +19,7 @@
 - [Bài 31 — DataProvider](#-bài-31--dataprovider)
 - [Bài 32 — Screenshot và Record Video](#-bài-32--screenshot-và-record-video)
 - [Bài 33 — TestListener](#-bài-33--testlistener)
+- [Bài 34 — Log4j2 Logging](#-bài-34--log4j2-logging)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -104,6 +105,8 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | **Monte Screen Recorder**| 0.7.7.0   | Quay video màn hình lúc chạy test (`.avi`)   |
 | **SLF4J API**            | 2.0.18    | Logging API chuẩn                            |
 | **SLF4J Simple**         | 2.0.18    | Implementation đơn giản cho SLF4J            |
+| **Log4j Core**           | 2.26.1    | 📌 Bài 34: engine ghi log ra console + file, tự xoay file |
+| **Log4j API**             | 2.26.1    | 📌 Bài 34: API gọi log (`Logger`, `LogManager`) — tách riêng khỏi engine |
 | **Maven Surefire Plugin**| 3.5.6     | Plugin chạy test và tích hợp TestNG suite    |
 
 ---
@@ -137,7 +140,12 @@ SeleniumTestNGParallel012026/
 │   │   └── utils/
 │   │       ├── JsonUtils.java           # Đọc/ghi test data ra file JSON trung gian (Gson)
 │   │       ├── ColorUtils.java          # Lấy mã màu HEX của pixel trên màn hình (từ Bài 12)
-│   │       └── LocalStorageUtils.java   # Đọc/ghi Local Storage qua JavascriptExecutor (từ Bài 14)
+│   │       ├── LocalStorageUtils.java   # Đọc/ghi Local Storage qua JavascriptExecutor (từ Bài 14)
+│   │       └── LogUtils.java            # 📌 Bài 34: bọc Log4j2 — info/warn/error/fatal/debug dùng chung cho cả framework
+│   │
+│   ├── main/resources/                  # 📌 Bài 34: config Log4j2, nằm ở main để cả main lẫn test đều dùng chung
+│   │   ├── log4j2.properties            # ĐANG DÙNG — console + rolling file, tự xoay theo ngày/dung lượng
+│   │   └── log4j2_OFF.xml               # Bản XML tương đương, đặt tên lệch nên KHÔNG được Log4j2 tự nạp — chỉ để đối chiếu 2 cú pháp
 │   │
 │   └── test/
 │       ├── java/com/anhtester/
@@ -219,8 +227,23 @@ SeleniumTestNGParallel012026/
 │       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │   │
-│       │   └── Bai33_TestListener/            # 📌 Bài 33: TestListener làm hết, test case sạch
-│       │       ├── pages/                     # Copy từ Bài 32 — DashboardPage đã gỡ lời gọi chụp ảnh
+│       │   ├── Bai33_TestListener/            # 📌 Bài 33: TestListener làm hết, test case sạch
+│       │   │   ├── pages/                     # Copy từ Bài 32 — DashboardPage đã gỡ lời gọi chụp ảnh
+│       │   │   │   ├── BasePage.java
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 8 TC Login — bỏ hết code chụp/quay, có 1 TC cố tình fail
+│       │   │       ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │   │       ├── CustomersTest.java     # 3 TC — bỏ hết code chụp/quay
+│       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │   │
+│       │   └── Bai34_Log4j2/                  # 📌 Bài 34: log ra console + file bằng Log4j2 thay vì System.out.println
+│       │       ├── pages/                     # Copy nguyên từ Bài 33, chỉ đổi package
 │       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
 │       │       │   ├── DashboardPage.java
@@ -228,9 +251,9 @@ SeleniumTestNGParallel012026/
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
 │       │       └── testcases/
-│       │           ├── LoginTest.java         # 8 TC Login — bỏ hết code chụp/quay, có 1 TC cố tình fail
+│       │           ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 33, chỉ đổi package
 │       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
-│       │           ├── CustomersTest.java     # 3 TC — bỏ hết code chụp/quay
+│       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 33
 │       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │           └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │
@@ -254,9 +277,10 @@ SeleniumTestNGParallel012026/
 │               ├── customer_data.json       # File JSON trung gian (tự sinh khi chạy test)
 │               └── project_data.json
 │
-├── exports/                         # 📌 Bài 32: output hình ảnh (đã cho vào .gitignore)
+├── exports/                         # 📌 Bài 32 & 34: output hình ảnh/video/log (đã cho vào .gitignore)
 │   ├── screenshots/                 # Ảnh chụp màn hình — WebUI.takeScreenshot() & CaptureHelper.captureScreenshot()
-│   └── videorecords/                # Video .avi — CaptureHelper.startRecord() / stopRecord()
+│   ├── videorecords/                # Video .avi — CaptureHelper.startRecord() / stopRecord()
+│   └── logs/                        # 📌 Bài 34: applog.log — RollingFileAppender tự xoay theo ngày/dung lượng
 └── target/                          # Thư mục output (auto-generated)
 ```
 
@@ -1219,6 +1243,142 @@ options.setAcceptInsecureCerts(true);
 
 ---
 
+## 📖 Bài 34 — Log4j2 Logging
+
+> `System.out.println` không phân biệt được mức độ nghiêm trọng (info/warning/lỗi), không tự ghi ra file, không tự xóa bớt log cũ. Bài 34 thay toàn bộ bằng **Log4j2**: một dòng gọi `LogUtils.info(...)` là log vừa lên console vừa ghi xuống file, tự xoay file theo ngày và theo dung lượng.
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `utils/LogUtils.java` | Bọc `org.apache.logging.log4j.Logger` — 5 mức: `info`, `warn`, `error`, `fatal`, `debug`. |
+| `resources/log4j2.properties` | File cấu hình **đang chạy thật** — 2 appender: Console + RollingFile. |
+| `resources/log4j2_OFF.xml` | Bản XML tương đương, chỉ để đối chiếu 2 cú pháp — đặt tên lệch nên Log4j2 không tự nạp (xem phần dưới). |
+| `common/BaseTest.java`, `listeners/TestListener.java`, `keywords/WebUI.java` | Toàn bộ `System.out.println(...)` đổi sang `LogUtils.info/warn/error(...)`. |
+| `Bai34_Log4j2/` | Bộ page + test case của Bài 33, copy nguyên, chỉ đổi package — mục đích của bài này nằm ở tầng hạ tầng logging, không phải test case. |
+
+### Thêm thư viện Log4j2
+
+```xml
+<dependency>
+   <groupId>org.apache.logging.log4j</groupId>
+   <artifactId>log4j-core</artifactId>
+   <version>2.26.1</version>
+</dependency>
+<dependency>
+   <groupId>org.apache.logging.log4j</groupId>
+   <artifactId>log4j-api</artifactId>
+   <version>2.26.1</version>
+</dependency>
+```
+
+> **Vì sao cần cả hai:** `log4j-api` là tập interface (`Logger`, `LogManager`) mà code gọi tới — tách riêng để sau này đổi engine log khác (Logback, SLF4J...) mà không phải sửa code gọi. `log4j-core` mới là engine thật sự đọc file cấu hình, ghi ra console/file. Thiếu `log4j-core` thì `LogManager.getLogger()` vẫn biên dịch được nhưng chạy lên chỉ in ra cảnh báo `ERROR StatusLogger ... "No Log4j 2 configuration file found"` và không log được gì.
+
+### `LogUtils` — bọc `Logger` thành hàm tĩnh dùng chung
+
+```java
+public class LogUtils {
+   private static final Logger logger = LogManager.getLogger(LogUtils.class);
+
+   public static void info(String message) {
+      logger.info(message);
+   }
+
+   public static void error(String message) {
+      logger.error(message);
+   }
+   // ... warn, fatal, debug — mỗi mức đều có overload nhận String và Object
+}
+```
+
+Áp vào những chỗ trước đây gọi `System.out.println`:
+
+```java
+// BaseTest — trước
+System.out.println("Browser sử dụng: " + browserName + " | headless: " + headless);
+
+// BaseTest — sau
+LogUtils.info("⚙️ Browser sử dụng: " + browserName + " | headless: " + headless);
+```
+
+```java
+// TestListener — chọn đúng mức theo ý nghĩa sự kiện, không dùng info() cho tất cả
+LogUtils.info("🚀 Bắt đầu chạy test case: " + result.getName());     // onTestStart
+LogUtils.info("✅ Test case " + result.getName() + " is passed.");   // onTestSuccess
+LogUtils.error("❌ Test case " + result.getName() + " is failed.");  // onTestFailure
+LogUtils.warn("🟡 Test case " + result.getName() + " is skipped."); // onTestSkipped
+```
+
+`WebUI.logConsole()` — hàm bọc `System.out.println` từ các bài trước — **bị xóa hẳn**, mọi nơi gọi nó đổi thẳng sang `LogUtils.info(...)` hoặc `LogUtils.error(...)` tùy ngữ cảnh (chờ timeout thì log ở mức `error`, log bình thường thì `info`).
+
+> **`LogManager.getLogger(LogUtils.class)` — cùng một cái bẫy ở mọi lớp bọc log.** Logger được tạo **một lần duy nhất** với tên cố định là `LogUtils`, bất kể dòng log đó thực chất gọi từ `BaseTest`, `WebUI` hay `TestListener`. Pattern `%c{1}` trong `log4j2.properties` vì vậy in ra `LogUtils` cho **mọi** dòng log của cả framework — nhìn log không biết dòng nào xuất phát từ class nào. Muốn log đúng tên class gọi thật thì phải bỏ lớp bọc tĩnh này, hoặc dùng `LogManager.getLogger()` (không tham số, Log4j2 tự suy ra class gọi qua stack trace).
+
+### Hai file cấu hình — vì sao file XML nằm yên không chạy
+
+Log4j2 tự quét classpath (`src/main/resources`) tìm đúng tên file `log4j2.properties` hoặc `log4j2.xml` — chỉ tên khớp mới được nạp tự động, và có nhiều biến thể đang cùng nằm trong classpath thì Log4j2 chỉ chọn **một** theo thứ tự ưu tiên định sẵn (JSON > YAML > properties > XML), còn tên lệch hẳn như `log4j2_OFF.xml` thì **Log4j2 không biết tới sự tồn tại của nó** — file này chỉ nằm đó để đọc, đối chiếu cú pháp XML với cú pháp properties đang chạy thật, muốn dùng thử phải đổi tên lại thành `log4j2.xml` (và xóa/đổi tên file `.properties` đi, tránh xung đột).
+
+```properties
+# log4j2.properties — ĐANG CHẠY THẬT
+status=info
+name=Log4j2PropertiesConfig
+appenders=a_console, a_rolling
+rootLogger.level=info
+rootLogger.appenderRefs=ar_console,ar_rolling
+rootLogger.appenderRef.ar_console.ref=StdoutAppender
+rootLogger.appenderRef.ar_rolling.ref=RollingAppender
+
+appender.a_console.type=Console
+appender.a_console.layout.pattern=[%level] %d{dd-MM-yyyy HH:mm:ss} [%c{1}] - %msg%n
+
+appender.a_rolling.type=RollingFile
+appender.a_rolling.fileName=exports/logs/applog.log
+appender.a_rolling.filePattern=exports/logs/applog-%d{dd-MM-yyyy}.log
+appender.a_rolling.policies.type=Policies
+appender.a_rolling.policies.time.type=TimeBasedTriggeringPolicy   # xoay file mỗi ngày
+appender.a_rolling.policies.size.type=SizeBasedTriggeringPolicy
+appender.a_rolling.policies.size.size=10MB                        # ...hoặc khi đầy 10MB, cái nào tới trước
+appender.a_rolling.strategy.max=20                                 # giữ tối đa 20 file cũ
+```
+
+- **`rootLogger` gắn cả hai appender** — mọi lời gọi `LogUtils.xxx()` tự động đi ra **cả** console lẫn file, không phải chọn một trong hai.
+- **Hai policy của `RollingFile` là quan hệ HOẶC.** File xoay khi thỏa **một trong hai**: đủ 24 giờ (nhờ `modulate=true`) **hoặc** đã ghi tới 10MB — cái nào chạm ngưỡng trước thì xoay trước. `strategy.max=20` là hàng rào chặn log tràn ổ đĩa, file thứ 21 đẩy file cũ nhất ra.
+- **`status=info` (properties) khác `rootLogger.level=info`.** `status` là log của chính **nội bộ Log4j2** (nó tự báo cáo việc nạp cấu hình có lỗi hay không), còn `rootLogger.level` mới là ngưỡng lọc cho log **của ứng dụng**. Nhầm hai cái này là lý do phổ biến khi thấy Log4j2 "im lặng" dù code đã gọi `LogUtils.info(...)`.
+
+### Nạp config sớm hơn — dời `loadAllFiles()` từ `BaseTest` sang `TestListener`
+
+```java
+// BaseTest — Bài 33: nạp ở @BeforeSuite của chính BaseTest
+@BeforeSuite(alwaysRun = true)
+public void loadConfigFiles() {
+   PropertiesHelper.loadAllFiles();
+}
+```
+
+```java
+// TestListener — Bài 34: gộp vào onStart(), không còn nằm ở BaseTest
+@Override
+public void onStart(ITestContext result) {
+   LogUtils.info("⏰ Bắt đầu chạy test lúc: " + result.getStartDate());
+   PropertiesHelper.loadAllFiles();
+}
+```
+
+> **Vì sao dời:** `onStart()` của `ITestListener` và `@BeforeSuite` của `BaseTest` chạy ở cùng một thời điểm (đầu mỗi thẻ `<test>`/trước class đầu tiên), nhưng đăng ký ở `TestListener` gom được **cả việc log "bắt đầu chạy" lẫn việc nạp config vào một chỗ** — đúng tinh thần Bài 33 (mọi việc hạ tầng giao hết cho listener, `BaseTest` chỉ còn lo tạo/đóng driver). Tác dụng phụ: TC nào chạy **không qua** `TestListener` (không kế thừa `BaseTest`, hoặc gỡ `@Listeners`) thì `PropertiesHelper.loadAllFiles()` không được gọi nữa — khác với Bài 29 → 33, nơi `@BeforeSuite` của `BaseTest` đảm bảo việc này luôn chạy miễn class có kế thừa `BaseTest`.
+
+**Kiến thức chính:**
+
+- **`Logger` nên tạo `private static final`, một lần cho cả class** — đúng như `LogUtils` đang làm. Gọi `LogManager.getLogger()` lại từ đầu ở mỗi lần log là tốn chi phí tra cứu cấu hình không cần thiết.
+
+- **Truyền `Throwable` bằng nối chuỗi thì MẤT stack trace.** `TestListener.onTestFailure` gọi `LogUtils.error("==> Nguồn gốc Fail: " + result.getThrowable())` — phép `+` đã tự động gọi `toString()` trên exception trước khi vào `LogUtils`, nên log chỉ có đúng **một dòng** thông báo lỗi. Log4j2 chỉ tự in **toàn bộ stack trace** khi nhận `Throwable` là **tham số riêng, không nối chuỗi**: `logger.error("message", throwable)`. Muốn debug sâu hơn khi TC fail thì `LogUtils` cần thêm overload `error(String message, Throwable t)`.
+
+- **Không có `log4j2.properties`/`.xml` trong classpath vẫn build và chạy được** — Log4j2 tự rơi về cấu hình mặc định (chỉ in `ERROR` trở lên ra console) và báo một dòng `StatusLogger` cảnh báo. Test không fail vì thiếu log, nhưng debug sẽ rất khó vì thiếu hẳn log `info`.
+
+- **`exports/logs/` nằm chung `.gitignore` với `exports/screenshots/` và `exports/videorecords/`** — log sinh ra khi chạy test không nên commit lên Git, dọn định kỳ giống hai thư mục kia.
+
+- **Thứ tự log khi chạy song song không phản ánh đúng thứ tự thao tác.** Nhiều luồng cùng ghi vào một file `applog.log` — `RollingFileAppender` của Log4j2 tự đồng bộ hóa (thread-safe) nên không mất dòng log hay hỏng file, nhưng các dòng log của nhiều luồng xen kẽ nhau. Cần lọc theo luồng thì thêm `%t` (tên thread) vào pattern — file `.properties` đã có sẵn ở appender rolling, còn appender console thì chưa.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -1244,8 +1404,10 @@ options.setAcceptInsecureCerts(true);
 | **Upload file** | `uploadFile`, `uploadFileToHiddenInput` |
 | **Cookie** | `addCookie`, `getAllCookies`, `getCookieValue`, `deleteCookie`, `deleteAllCookies` |
 | **Assert / Verify** | `verifyEquals`, `verifyContains` (trả `true/false`) — `assertEquals`, `assertContains` (fail test) |
-| **Tiện ích** | `sleep`, `smartWait`, `logConsole` |
+| **Tiện ích** | `sleep`, `smartWait` |
 
+> 📌 **Bài 34:** `logConsole()` đã bị xóa khỏi `WebUI` — mọi lời gọi log trong `WebUI` (chờ timeout, không tìm thấy element...) đổi sang `LogUtils.info()`/`LogUtils.error()`, xem [Bài 34](#-bài-34--log4j2-logging).
+>
 > Giải thích chi tiết từng nhóm (vì sao cần `retryUntil`, bẫy `getAttribute("value")`, `setTextByJS` phải bắn event...) nằm ở phần Bài 24 & 25 của repo chính.
 
 ---
@@ -1322,6 +1484,12 @@ mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai33_TestLis
 ```
 
 ```bash
+# = LoginTest của Bài 34 — giống hệt Bài 33, khác ở chỗ mọi log đi qua LogUtils/Log4j2
+# Bài 34 CHƯA có suite XML riêng, chạy trực tiếp bằng -Dtest kèm full package cho khỏi trùng tên class
+mvn test "-Dtest=com.anhtester.Bai34_Log4j2.testcases.LoginTest"
+```
+
+```bash
 # Chạy một class cụ thể (tuần tự, Chrome mặc định)
 mvn test "-Dtest=CustomersTest"
 ```
@@ -1345,8 +1513,11 @@ mvn clean test
 - Báo cáo HTML của TestNG: `target/surefire-reports/index.html`
 - Ảnh chụp màn hình: `exports/screenshots/`
 - Video quay màn hình: `exports/videorecords/` (chỉ có khi bật `VIDEO_RECORD_ACTIVE = true`)
+- Log Log4j2: `exports/logs/applog.log` (📌 Bài 34 — tự xoay file theo ngày/dung lượng)
 
 > Từ Bài 33, việc chụp ảnh / quay video do `TestListener` lo — bật tắt bằng 4 key `SCREENSHOT_PASSED_STEP`, `SCREENSHOT_FAILED_STEP`, `SCREENSHOT_ALL_STEPS`, `VIDEO_RECORD_ACTIVE` trong `config.properties`, không phải sửa code.
+>
+> Từ Bài 34, mọi `System.out.println` trong framework đã đổi sang `LogUtils` — console vẫn thấy log như trước, nhưng giờ có thêm bản lưu file kèm timestamp và mức độ (`INFO`/`WARN`/`ERROR`).
 
 ---
 

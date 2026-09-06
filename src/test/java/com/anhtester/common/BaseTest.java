@@ -5,6 +5,7 @@ import com.anhtester.drivers.DriverManager;
 import com.anhtester.drivers.ParameterManager;
 import com.anhtester.helpers.PropertiesHelper;
 import com.anhtester.listeners.TestListener;
+import com.anhtester.utils.LogUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -21,11 +22,6 @@ import java.util.Map;
 @Listeners({TestListener.class})
 public class BaseTest {
 
-   @BeforeSuite(alwaysRun = true)
-   public void loadConfigFiles() {
-      PropertiesHelper.loadAllFiles();
-   }
-
    @BeforeMethod
    @Parameters({"browser"})
    public void createDriver(@Optional("chrome") String browserName) {
@@ -35,24 +31,24 @@ public class BaseTest {
 
       // headless đi theo đúng thứ tự ưu tiên như browser
       boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
-      System.out.println("Browser sử dụng: " + browserName + " | headless: " + headless);
+      LogUtils.info("⚙\uFE0F Browser sử dụng: " + browserName + " | headless: " + headless);
 
       WebDriver driver;
       switch (browserName.trim().toLowerCase()) {
          case "chrome":
-            System.out.println("Launching Chrome browser...");
+            LogUtils.info("Launching Chrome browser...");
             driver = new ChromeDriver(getChromeOptions(headless));
             break;
          case "firefox":
-            System.out.println("Launching Firefox browser...");
+            LogUtils.info("Launching Firefox browser...");
             driver = new FirefoxDriver(getFirefoxOptions(headless));
             break;
          case "edge":
-            System.out.println("Launching Edge browser...");
+            LogUtils.info("Launching Edge browser...");
             driver = new EdgeDriver(getEdgeOptions(headless));
             break;
          default:
-            System.out.println("Browser: " + browserName + " is invalid, Launching Chrome as browser of choice...");
+            LogUtils.info("Browser: " + browserName + " is invalid, Launching Chrome as browser of choice...");
             driver = new ChromeDriver(getChromeOptions(headless));
       }
 
