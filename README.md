@@ -20,6 +20,7 @@
 - [Bài 32 — Screenshot và Record Video](#-bài-32--screenshot-và-record-video)
 - [Bài 33 — TestListener](#-bài-33--testlistener)
 - [Bài 34 — Log4j2 Logging](#-bài-34--log4j2-logging)
+- [Bài 35 — Extent Report](#-bài-35--extent-report)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -107,6 +108,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | **SLF4J Simple**         | 2.0.18    | Implementation đơn giản cho SLF4J            |
 | **Log4j Core**           | 2.26.1    | 📌 Bài 34: engine ghi log ra console + file, tự xoay file |
 | **Log4j API**             | 2.26.1    | 📌 Bài 34: API gọi log (`Logger`, `LogManager`) — tách riêng khỏi engine |
+| **ExtentReports**        | 5.1.2     | 📌 Bài 35: sinh báo cáo HTML — nhúng ảnh chụp màn hình theo từng bước |
 | **Maven Surefire Plugin**| 3.5.6     | Plugin chạy test và tích hợp TestNG suite    |
 
 ---
@@ -133,10 +135,13 @@ SeleniumTestNGParallel012026/
 │   │   │   ├── CaptureHelper.java       # 📌 Bài 32: chụp màn hình (TakesScreenshot) + quay video (Monte Screen Recorder)
 │   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
-│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, chụp ảnh theo SCREENSHOT_ALL_STEPS
+│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, chụp ảnh theo SCREENSHOT_ALL_STEPS, ghi Log4j2 + Extent Report
 │   │   │   ├── ActionKeyword.java       # Lớp keyword đời đầu (giữ lại từ các bài trước, không còn dùng)
 │   │   │   ├── MobileUI.java            # (placeholder) Keyword cho Mobile Automation — Appium
 │   │   │   └── APIKeyword.java          # (placeholder) Keyword cho API Automation — REST Assured
+│   │   ├── reports/                     # 📌 Bài 35 — ⚠️ đang bị `.gitignore` (dòng `reports/`) nuốt mất, xem lưu ý ở phần Bài 35
+│   │   │   ├── ExtentReportManager.java # Giữ 1 instance `ExtentReports` dùng chung cho cả run, gắn `ExtentSparkReporter`
+│   │   │   └── ExtentTestManager.java   # Giữ 1 `ExtentTest` riêng cho mỗi luồng (Map theo threadId) — log kèm ảnh
 │   │   └── utils/
 │   │       ├── JsonUtils.java           # Đọc/ghi test data ra file JSON trung gian (Gson)
 │   │       ├── ColorUtils.java          # Lấy mã màu HEX của pixel trên màn hình (từ Bài 12)
@@ -242,8 +247,23 @@ SeleniumTestNGParallel012026/
 │       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │   │
-│       │   └── Bai34_Log4j2/                  # 📌 Bài 34: log ra console + file bằng Log4j2 thay vì System.out.println
-│       │       ├── pages/                     # Copy nguyên từ Bài 33, chỉ đổi package
+│       │   ├── Bai34_Log4j2/                  # 📌 Bài 34: log ra console + file bằng Log4j2 thay vì System.out.println
+│       │   │   ├── pages/                     # Copy nguyên từ Bài 33, chỉ đổi package
+│       │   │   │   ├── BasePage.java
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 33, chỉ đổi package
+│       │   │       ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │   │       ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 33
+│       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │   │
+│       │   └── Bai35_ExtentReport/            # 📌 Bài 35: xuất báo cáo HTML bằng ExtentReports
+│       │       ├── pages/                     # Copy nguyên từ Bài 34, chỉ đổi package
 │       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
 │       │       │   ├── DashboardPage.java
@@ -251,9 +271,9 @@ SeleniumTestNGParallel012026/
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
 │       │       └── testcases/
-│       │           ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 33, chỉ đổi package
+│       │           ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 34, chỉ đổi package
 │       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
-│       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 33
+│       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 34
 │       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │           └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │
@@ -269,7 +289,8 @@ SeleniumTestNGParallel012026/
 │           │   ├── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
 │           │   ├── Suite_Bai31_DataProvider.xml                      # DemoDataProviderPOM — bật data-provider-thread-count
 │           │   ├── Suite_Bai32_Screenshot_VideoRecord.xml            # CustomersTest có quay video — bắt buộc parallel="none"
-│           │   └── Suite_Bai33_TestListener.xml                      # LoginTest — listener gắn ở BaseTest, <listeners> XML để comment
+│           │   ├── Suite_Bai33_TestListener.xml                      # LoginTest — listener gắn ở BaseTest, <listeners> XML để comment
+│           │   └── Suite_Bai35_ExtentReport.xml                      # 3 thẻ <test> (Login / Dashboard+Customers / Customers) gộp vào 1 report
 │           │
 │           └── testdata/
 │               ├── crm_data.xlsx            # 📌 Sheet Login (Bài 30) + sheet AddCustomer (Bài 31)
@@ -277,10 +298,11 @@ SeleniumTestNGParallel012026/
 │               ├── customer_data.json       # File JSON trung gian (tự sinh khi chạy test)
 │               └── project_data.json
 │
-├── exports/                         # 📌 Bài 32 & 34: output hình ảnh/video/log (đã cho vào .gitignore)
+├── exports/                         # 📌 Bài 32, 34 & 35: output hình ảnh/video/log/report (đã cho vào .gitignore)
 │   ├── screenshots/                 # Ảnh chụp màn hình — WebUI.takeScreenshot() & CaptureHelper.captureScreenshot()
 │   ├── videorecords/                # Video .avi — CaptureHelper.startRecord() / stopRecord()
-│   └── logs/                        # 📌 Bài 34: applog.log — RollingFileAppender tự xoay theo ngày/dung lượng
+│   ├── logs/                        # 📌 Bài 34: applog.log — RollingFileAppender tự xoay theo ngày/dung lượng
+│   └── reports/extentreport/        # 📌 Bài 35: extentreport.html — mở trực tiếp bằng trình duyệt
 └── target/                          # Thư mục output (auto-generated)
 ```
 
@@ -1379,6 +1401,126 @@ public void onStart(ITestContext result) {
 
 ---
 
+## 📖 Bài 35 — Extent Report
+
+> Log ra console/file (Bài 34) tốt cho việc **debug**, nhưng đưa cho PM hay khách hàng xem thì không trực quan. Bài 35 thêm **ExtentReports** — báo cáo dạng HTML, mở bằng trình duyệt, có biểu đồ PASS/FAIL/SKIP tổng quan và **ảnh chụp màn hình nhúng thẳng vào từng bước** của từng test case.
+
+> ⚠️ **Lưu ý quan trọng trước khi commit:** package mới `com.anhtester.reports` (chứa `ExtentReportManager.java` và `ExtentTestManager.java` — chính là code của bài này) đang bị **`.gitignore` nuốt mất**. Dòng `reports/` trong `.gitignore` (thêm từ trước, ý định là bỏ qua thư mục **output** report cũ) không có dấu `/` ở đầu nên khớp với **bất kỳ** thư mục tên `reports` ở **bất kỳ cấp nào**, kể cả `src/main/java/com/anhtester/reports/`. Hệ quả: `git status` không thấy 2 file này, `git add -A` cũng không thêm được — code lõi của Bài 35 sẽ **không nằm trong bất kỳ commit nào** cho tới khi sửa `.gitignore` (đổi dòng đó thành `/exports/reports/`, hoặc thêm ngoại lệ `!src/main/java/com/anhtester/reports/`).
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `reports/ExtentReportManager.java` | Giữ **một** instance `ExtentReports` dùng chung cho cả run, gắn `ExtentSparkReporter` xuất ra `exports/reports/extentreport/extentreport.html`. |
+| `reports/ExtentTestManager.java` | Giữ **một `ExtentTest` riêng cho mỗi luồng** (`Map<Integer, ExtentTest>` theo `threadId`) — `saveToReport()` tạo mới, `getTest()` lấy đúng của luồng hiện tại, `logMessage()`/`addScreenshot()` ghi log kèm ảnh base64. |
+| `listeners/TestListener.java` | `onTestStart` tạo test mới trong report; `onTestSuccess/Failure/Skipped` ghi `Status.PASS/FAIL/SKIP` + chụp ảnh khi fail; `onFinish` gọi `flush()` xuất file HTML. |
+| `keywords/WebUI.java` | Các hàm hay dùng (`clickElement`, `setText`, `getElementText`, `assertEquals`...) ghi thêm một dòng vào Extent Report, song song với `LogUtils`. |
+| `Bai35_ExtentReport/` | Copy nguyên từ Bài 34, chỉ đổi package. |
+| `suites/Suite_Bai35_ExtentReport.xml` | 3 thẻ `<test>` (Login / Dashboard+Customers / Customers) — minh họa report gộp **nhiều `<test>`** vào **một** file HTML duy nhất. |
+
+### Thêm thư viện ExtentReports
+
+```xml
+<dependency>
+   <groupId>com.aventstack</groupId>
+   <artifactId>extentreports</artifactId>
+   <version>5.1.2</version>
+</dependency>
+```
+
+### `ExtentReportManager` — một `ExtentReports` dùng chung cho cả run
+
+```java
+public class ExtentReportManager {
+   private static final ExtentReports extentReports = new ExtentReports();
+
+   public synchronized static ExtentReports getExtentReports() {
+      ExtentSparkReporter reporter = new ExtentSparkReporter("exports/reports/extentreport/extentreport.html");
+      reporter.config().setReportName("Extent Report | Anh Tester");
+      extentReports.attachReporter(reporter);
+      extentReports.setSystemInfo("Framework Name", "Selenium Java | Anh Tester");
+      return extentReports;
+   }
+}
+```
+
+> **Vì sao phải `static`:** một `ExtentReports` đại diện cho **một** file report. Tạo mới instance ở mỗi nơi gọi là mỗi chỗ ghi ra một file rời rạc — mất hẳn khả năng xem toàn bộ lần chạy trong **một** trang duy nhất. Giữ `static` để tất cả các luồng, tất cả các `<test>` trong suite đều ghi chung vào một `ExtentReports`.
+>
+> **`getExtentReports()` không phải getter thuần** — mỗi lần gọi lại tạo **thêm một** `ExtentSparkReporter` mới rồi `attachReporter()` vào, không gỡ cái cũ. Hàm này được gọi 2 nơi: một lần lúc `ExtentTestManager` nạp class, và **mỗi lần** `TestListener.onFinish()` chạy (tức mỗi thẻ `<test>` trong suite). `Suite_Bai35_ExtentReport.xml` có 3 thẻ `<test>` → cả run gắn dư **3 reporter** cùng ghi ra một file, không sai kết quả (cùng nội dung) nhưng lãng phí. Cách đúng hơn: gọi thẳng `flush()` trên biến `static extentReports`, không gọi lại `getExtentReports()` chỉ để lấy về flush.
+
+### `ExtentTestManager` — mỗi luồng một `ExtentTest`
+
+```java
+public class ExtentTestManager {
+   static Map<Integer, ExtentTest> extentTestMap = new HashMap<>();
+   static ExtentReports extent = ExtentReportManager.getExtentReports();
+
+   public static ExtentTest getTest() {
+      return extentTestMap.get((int) Thread.currentThread().getId());
+   }
+
+   public static synchronized ExtentTest saveToReport(String testName, String desc) {
+      ExtentTest test = extent.createTest(testName, desc);
+      extentTestMap.put((int) Thread.currentThread().getId(), test);
+      return test;
+   }
+}
+```
+
+> **Cùng tinh thần `ThreadLocal` của `DriverManager` (Bài 28), nhưng tự chế bằng tay.** `ExtentTest` không có kiểu dựng sẵn để gắn thẳng vào `ThreadLocal` gọn như `WebDriver`, nên bài này dùng `HashMap<Integer, ExtentTest>` với **key là `threadId`** — mỗi luồng tự tạo test của mình ở `onTestStart` và chỉ đọc đúng entry của mình ở `getTest()`, nhờ vậy chạy `parallel="methods"` vẫn ghi đúng bước vào đúng test case, không lẫn giữa các luồng.
+>
+> **`saveToReport()` có `synchronized` (ghi), nhưng `getTest()` (đọc) thì không.** `HashMap` vốn không thread-safe khi vừa đọc vừa ghi đồng thời — may mắn là mỗi luồng chỉ `put`/`get` đúng key của chính nó nên hiếm khi thấy hiện tượng lạ trong bài học này, nhưng đây là lý do các framework thật thường dùng `ConcurrentHashMap` thay vì `HashMap` trần cho đúng chuẩn.
+
+### Gắn vào vòng đời `TestListener`
+
+```java
+@Override
+public void onTestStart(ITestResult result) {
+   ...
+   ExtentTestManager.saveToReport(getTestName(result), getTestDescription(result));
+}
+
+@Override
+public void onTestFailure(ITestResult result) {
+   ...
+   ExtentTestManager.addScreenshot(result.getName());
+   ExtentTestManager.logMessage(Status.FAIL, result.getThrowable().toString());
+   ExtentTestManager.logMessage(Status.FAIL, "❌ Test case " + result.getName() + " is failed.");
+}
+
+@Override
+public void onFinish(ITestContext result) {
+   ...
+   ExtentReportManager.getExtentReports().flush();   // Bắt buộc: không flush() thì file HTML rỗng
+}
+```
+
+- **`getTestDescription()` lấy từ `@Test(description = "...")`**, không có thì rơi về đúng tên method. Bộ test case Bài 35 (copy nguyên từ Bài 34) **chưa TC nào khai báo `description`**, nên cột mô tả trên report hiện tại đang trùng hệt cột tên — muốn report dễ đọc hơn cho người không rành code thì thêm `@Test(description = "Đăng nhập thành công với tài khoản hợp lệ")`.
+- **Ảnh chụp trong `addScreenshot()` dùng `OutputType.BASE64`**, khác với `CaptureHelper.captureScreenshot()` của Bài 32 (ghi file `.png` riêng). Nhúng thẳng chuỗi base64 vào HTML report giúp mở file `extentreport.html` **offline** vẫn thấy ảnh, không cần mang theo cả thư mục ảnh đi kèm.
+- **Không `flush()` ở `onFinish` thì file `extentreport.html` sinh ra nhưng rỗng.** `ExtentSparkReporter` chỉ thật sự ghi nội dung xuống đĩa lúc `flush()` được gọi — mọi `createTest()`/`log()` trước đó chỉ nằm trong bộ nhớ.
+
+> **`onTestSkipped` gọi `result.getThrowable().toString()` — rủi ro `NullPointerException`.** TC bị skip vì **exception** (ví dụ `@BeforeMethod` fail, hoặc `throw new SkipException(...)` như `DataProviderFactory` ở Bài 31) thì `getThrowable()` có giá trị. Nhưng TC bị skip vì **phụ thuộc** (`dependsOnMethods` mà method trước fail, TestNG tự skip không ném exception nào) thì `getThrowable()` trả về `null` — gọi `.toString()` lên đó là `NullPointerException`, và callback `onTestSkipped` bể giữa chừng có thể làm **mất luôn** những dòng log Extent Report định ghi sau đó trong cùng hàm.
+
+### Đường dẫn output
+
+```
+exports/reports/extentreport/extentreport.html
+```
+
+Mở trực tiếp bằng trình duyệt (không cần server) — biểu đồ tổng quan PASS/FAIL/SKIP ở trang đầu, click vào từng test case để xem log + ảnh chụp theo từng bước. Thư mục `exports/` đã nằm trong `.gitignore` nên báo cáo không bị commit lên Git — khác với package `reports/` ở mã nguồn đang bị `.gitignore` chặn **nhầm** như lưu ý ở đầu mục này.
+
+**Kiến thức chính:**
+
+- **`ExtentTest` phải được tạo ở `onTestStart`, trước khi bất kỳ keyword nào trong `WebUI` chạy.** `WebUI.clickElement()`, `setText()`... gọi thẳng `ExtentTestManager.logMessage(...)` mà bên trong lại gọi `getTest()` — luồng nào chưa có `ExtentTest` (ví dụ gọi keyword ở `@BeforeClass` thay vì trong `@Test`) sẽ nhận `null` từ `getTest()` và ném `NullPointerException` ngay dòng `.log(...)`.
+
+- **`WebUI` giờ ghi log vào HAI nơi song song: `LogUtils` (Bài 34) và `ExtentTestManager` (Bài 35).** Hai hệ thống độc lập, phục vụ hai mục đích khác nhau — `LogUtils`/Log4j2 cho việc **debug bằng file log thô, dò theo timestamp**, còn Extent Report cho việc **xem lại bằng mắt kèm ảnh chụp**, gọn để gửi cho người không đọc code.
+
+- **`ExtentReports.setSystemInfo()` chỉ nên gọi một lần** — thông tin này in ra ở trang tổng quan (Framework Name, Author...). Gọi lại nhiều lần (do `getExtentReports()` bị gọi lặp như đã nói ở trên) không sinh lỗi, dòng sau chỉ đè lên dòng trước, nhưng là dấu hiệu cho thấy hàm này đang được gọi nhiều hơn cần thiết.
+
+- **Suite của bài này chạy `parallel="none"`** (thừa hưởng từ `Suite_Bai33_TestListener.xml`) dù các thẻ `<test>` bên trong khai `parallel="methods"` — vẫn an toàn cho `ExtentTestManager` vì mỗi luồng method tự tạo `ExtentTest` riêng theo `threadId`, nhưng nếu để cả suite `parallel="tests"` thì nhiều thẻ `<test>` cùng gọi `onFinish()` → `flush()` gần như đồng thời, ExtentSparkReporter vẫn ghi được (tự khóa nội bộ) nhưng không có gì đảm bảo thứ tự các test case xuất hiện trên report khớp với thứ tự khai báo trong XML.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -1490,6 +1632,11 @@ mvn test "-Dtest=com.anhtester.Bai34_Log4j2.testcases.LoginTest"
 ```
 
 ```bash
+# = Bài 35 — 3 thẻ <test> (Login / Dashboard+Customers / Customers) gộp chung vào 1 file extentreport.html
+mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai35_ExtentReport.xml"
+```
+
+```bash
 # Chạy một class cụ thể (tuần tự, Chrome mặc định)
 mvn test "-Dtest=CustomersTest"
 ```
@@ -1514,10 +1661,13 @@ mvn clean test
 - Ảnh chụp màn hình: `exports/screenshots/`
 - Video quay màn hình: `exports/videorecords/` (chỉ có khi bật `VIDEO_RECORD_ACTIVE = true`)
 - Log Log4j2: `exports/logs/applog.log` (📌 Bài 34 — tự xoay file theo ngày/dung lượng)
+- Báo cáo HTML: `exports/reports/extentreport/extentreport.html` (📌 Bài 35 — mở bằng trình duyệt, có ảnh chụp kèm theo)
 
 > Từ Bài 33, việc chụp ảnh / quay video do `TestListener` lo — bật tắt bằng 4 key `SCREENSHOT_PASSED_STEP`, `SCREENSHOT_FAILED_STEP`, `SCREENSHOT_ALL_STEPS`, `VIDEO_RECORD_ACTIVE` trong `config.properties`, không phải sửa code.
 >
 > Từ Bài 34, mọi `System.out.println` trong framework đã đổi sang `LogUtils` — console vẫn thấy log như trước, nhưng giờ có thêm bản lưu file kèm timestamp và mức độ (`INFO`/`WARN`/`ERROR`).
+>
+> Từ Bài 35, `TestListener` còn ghi thêm mỗi test case thành một mục trong Extent Report kèm ảnh chụp khi fail — nhớ sửa `.gitignore` (xem lưu ý ⚠️ ở [Bài 35](#-bài-35--extent-report)) trước khi commit, không thì code của bài này không lên được Git.
 
 ---
 

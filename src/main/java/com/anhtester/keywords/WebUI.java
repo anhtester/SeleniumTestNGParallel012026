@@ -1,9 +1,13 @@
 package com.anhtester.keywords;
 
 import com.anhtester.constants.ConfigData;
+import static com.anhtester.drivers.DriverManager.*;
+
 import com.anhtester.drivers.DriverManager;
 import com.anhtester.helpers.CaptureHelper;
+import com.anhtester.reports.ExtentTestManager;
 import com.anhtester.utils.LogUtils;
+import com.aventstack.extentreports.Status;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.*;
@@ -382,10 +386,12 @@ public class WebUI {
       DriverManager.getDriver().get(url);
       sleep(STEP_TIME);
       LogUtils.info("\uD83C\uDF10 Open URL:  " + url);
+      ExtentTestManager.logMessage(Status.INFO, "Get Current URL: " + getDriver().getCurrentUrl());
    }
 
    public static String getCurrentURL() {
       LogUtils.info("Current URL: " + DriverManager.getDriver().getCurrentUrl());
+      ExtentTestManager.logMessage(Status.INFO, "Current URL: " + DriverManager.getDriver().getCurrentUrl());
       return DriverManager.getDriver().getCurrentUrl();
    }
 
@@ -398,6 +404,8 @@ public class WebUI {
          return true;
       });
       LogUtils.info("Click on element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "Click on element " + by);
+
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("clickElement");
@@ -412,6 +420,7 @@ public class WebUI {
          return true;
       });
       LogUtils.info("Click on element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "Click on element " + by);
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("clickElement");
@@ -434,6 +443,7 @@ public class WebUI {
          return true;
       });
       LogUtils.info("Set text " + value + " on element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "Set text " + value + " on element " + by);
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("setText");
@@ -454,6 +464,8 @@ public class WebUI {
       //waitForElementVisible(by);
       //getWebElement(by).sendKeys(value, key);
       LogUtils.info("Set text: " + value + " on element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "Set text " + value + " on element " + by);
+
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("setText");
@@ -466,6 +478,9 @@ public class WebUI {
       LogUtils.info("Get text of element " + by);
       String text = retryUntil(_driver -> _driver.findElement(by).getText());
       LogUtils.info("==> TEXT: " + text);
+
+      ExtentTestManager.logMessage(Status.INFO, "Get text of element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "==> TEXT: " + text);
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("getElementText");
@@ -480,6 +495,10 @@ public class WebUI {
       String value = retryUntil(_driver -> Optional.ofNullable(_driver.findElement(by).getAttribute(attributeName)))
               .orElse(null);
       LogUtils.info("==> Attribute value: " + value);
+
+      ExtentTestManager.logMessage(Status.INFO, "Get attribute " + attributeName + " of element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "==> Attribute value: " + value);
+
       return value;
    }
 
@@ -488,6 +507,10 @@ public class WebUI {
       LogUtils.info("Get CSS value " + cssPropertyName + " of element " + by);
       String value = retryUntil(_driver -> _driver.findElement(by).getCssValue(cssPropertyName));
       LogUtils.info("==> CSS value: " + value);
+
+      ExtentTestManager.logMessage(Status.INFO, "Get CSS value " + cssPropertyName + " of element " + by);
+      ExtentTestManager.logMessage(Status.INFO, "==> CSS value: " + value);
+
       return value;
    }
 
@@ -708,21 +731,27 @@ public class WebUI {
 
    public static boolean verifyEquals(Object actual, Object expected) {
       LogUtils.info("Verify equals: " + actual + " and " + expected);
+      ExtentTestManager.logMessage(Status.INFO, "Verify equals: " + actual + " and " + expected);
       boolean check = actual.equals(expected);
       if (check) {
          LogUtils.info("➡\uFE0F Equals.");
+         ExtentTestManager.logMessage(Status.INFO, "➡\uFE0F Equals.");
       } else {
          LogUtils.error("⛔\uFE0F NOT Equals.");
+         ExtentTestManager.logMessage(Status.FAIL, "⛔\uFE0F NOT Equals.");
       }
       return check;
    }
 
    public static void assertEquals(Object actual, Object expected, String message) {
       LogUtils.info("Assert equals: " + actual + " \uD83D\uDFF0 " + expected);
+      ExtentTestManager.logMessage(Status.INFO, "Assert equals: " + actual + " \uD83D\uDFF0 " + expected);
       if (actual.equals(expected)) {
          LogUtils.info("➡\uFE0F Equals.");
+         ExtentTestManager.logMessage(Status.INFO, "➡\uFE0F Equals.");
       } else {
          LogUtils.error("⛔\uFE0F NOT Equals.");
+         ExtentTestManager.logMessage(Status.FAIL, "⛔\uFE0F NOT Equals.");
       }
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
@@ -734,12 +763,15 @@ public class WebUI {
 
    public static boolean verifyContains(String actual, String expected) {
       LogUtils.info("Verify contains: " + actual + " and " + expected);
+      ExtentTestManager.logMessage(Status.INFO, "Verify contains: " + actual + " and " + expected);
       boolean check = actual.contains(expected);
       return check;
    }
 
    public static void assertContains(String actual, String expected, String message) {
       LogUtils.info("Assert contains: " + actual + " and " + expected);
+      ExtentTestManager.logMessage(Status.INFO, "Assert contains: " + actual + " and " + expected);
+
       boolean check = actual.contains(expected);
 
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){

@@ -1,0 +1,26 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite Report" parallel="none" thread-count="4">
+
+   <test name="Login Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai35_ExtentReport.testcases.LoginTest" />
+      </classes>
+   </test>
+
+   <test name="Login DashboardTest" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai35_ExtentReport.testcases.DashboardTest" />
+         <class name="com.anhtester.Bai35_ExtentReport.testcases.CustomersTest" />
+      </classes>
+   </test>
+
+   <test name="Login CustomersTest" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai35_ExtentReport.testcases.CustomersTest" />
+      </classes>
+   </test>
+</suite>
