@@ -1,8 +1,8 @@
 # ⚡ SeleniumTestNGParallel012026
 
 > Source code khóa học **Selenium Java 01/2026** — Anh Tester
-> Phần **chạy test song song và cấu hình framework** (Bài 28 → 33), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
-> Sử dụng **Selenium WebDriver 4.48** + **Java 17** + **Maven** + **TestNG 7.12**.
+> Phần **chạy test song song và cấu hình framework** (Bài 28 → 36), tách riêng từ repo chính [SeleniumMaven012026](https://github.com/anhtester/SeleniumMaven012026) (Bài 5 → 27).
+> Sử dụng **Selenium WebDriver 4.48** + **Java 17** + **Maven** + **TestNG 7.4**.
 
 ---
 
@@ -21,6 +21,7 @@
 - [Bài 33 — TestListener](#-bài-33--testlistener)
 - [Bài 34 — Log4j2 Logging](#-bài-34--log4j2-logging)
 - [Bài 35 — Extent Report](#-bài-35--extent-report)
+- [Bài 36 — Allure Report](#-bài-36--allure-report)
 - [Bộ keyword WebUI](#-bộ-keyword-webui)
 - [Dữ liệu trung gian giữa các test case](#-dữ-liệu-trung-gian-giữa-các-test-case)
 - [Cách chạy test](#-cách-chạy-test)
@@ -52,6 +53,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | **Trình duyệt**  | Chrome, Firefox, Edge (suite mẫu dùng cả 3)                 |
 | **IDE**          | IntelliJ IDEA, VS Code                      |
 | **RAM**          | Nên có ≥ 16GB — chạy song song mở nhiều trình duyệt cùng lúc |
+| **Allure CLI**   | **Không cần cài** — 📌 Bài 36: plugin `allure-maven` tự tải Allure 2 vào thư mục `.allure/` của repo, chỉ cần có mạng ở lần chạy đầu |
 
 > **Lưu ý:** Selenium 4.x tự động quản lý WebDriver thông qua Selenium Manager — không cần tải `chromedriver` / `geckodriver` thủ công.
 
@@ -72,7 +74,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    mvn clean install -DskipTests
    ```
 
-4. **Chạy test** — `pom.xml` đang trỏ sẵn tới suite của **Bài 29**:
+4. **Chạy test** — `pom.xml` đang trỏ sẵn tới suite của **Bài 36**:
    ```bash
    mvn test
    ```
@@ -81,11 +83,13 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
    | Bài | File suite |
    | :-- | :--- |
    | 28 | `Suite_Bai28_DriverManager_ParallelExecution.xml` |
-   | 29 | `Suite_Bai29_PropertiesConfig.xml` *(mặc định)* |
+   | 29 | `Suite_Bai29_PropertiesConfig.xml` |
    | 30 | `Suite_Bai30_Excel_Data.xml` |
    | 31 | `Suite_Bai31_DataProvider.xml` |
    | 32 | `Suite_Bai32_Screenshot_VideoRecord.xml` |
    | 33 | `Suite_Bai33_TestListener.xml` |
+   | 35 | `Suite_Bai35_ExtentReport.xml` |
+   | 36 | `Suite_Bai36_AllureReport.xml` *(mặc định)* |
 
    ```bash
    mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai30_Excel_Data.xml"
@@ -98,7 +102,7 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | Thư viện / Tool          | Phiên bản | Mục đích                                    |
 | ------------------------ |-----------| -------------------------------------------- |
 | **Selenium Java**        | 4.48.0    | Tự động hóa trình duyệt web                 |
-| **TestNG**               | 7.12.0    | Framework quản lý test case + cơ chế parallel |
+| **TestNG**               | 7.4.0     | Framework quản lý test case + cơ chế parallel (📌 Bài 36: hạ từ 7.12.0 xuống 7.4.0) |
 | **Gson**                 | 2.14.0    | Đọc/ghi file JSON trung gian chia sẻ test data |
 | **Apache POI**           | 5.5.1     | Đọc/ghi file Excel — lấy data cho test case  |
 | **Apache POI OOXML**     | 5.5.1     | Hỗ trợ định dạng `.xlsx` + tô màu cell (`XSSF`) |
@@ -109,6 +113,11 @@ Toàn bộ kiến thức nền (Locators, WebElement, WebDriver, TestNG, POM, Pa
 | **Log4j Core**           | 2.26.1    | 📌 Bài 34: engine ghi log ra console + file, tự xoay file |
 | **Log4j API**             | 2.26.1    | 📌 Bài 34: API gọi log (`Logger`, `LogManager`) — tách riêng khỏi engine |
 | **ExtentReports**        | 5.1.2     | 📌 Bài 35: sinh báo cáo HTML — nhúng ảnh chụp màn hình theo từng bước |
+| **Allure TestNG**        | 2.35.5    | 📌 Bài 36: listener ghi kết quả test ra `allure-results` + các annotation `@Step`, `@Epic`, `@Severity`... |
+| **Allure Attachments**   | 2.35.5    | 📌 Bài 36: tiện ích đính kèm file vào Allure Report |
+| **AspectJ Weaver**       | 1.9.25.1  | 📌 Bài 36: nạp qua `-javaagent` — thiếu nó thì `@Step`/`@Attachment` không chạy |
+| **Allure Maven Plugin**  | 2.17.0    | 📌 Bài 36: tự tải Allure 2 CLI (2.46.1) vào `.allure/`, dựng report bằng `mvn allure:report` / `mvn allure:serve` |
+| **Lombok**               | 1.18.48   | Thêm vào `pom.xml` ở Bài 36, chưa dùng tới trong code |
 | **Maven Surefire Plugin**| 3.5.6     | Plugin chạy test và tích hợp TestNG suite    |
 
 ---
@@ -135,13 +144,14 @@ SeleniumTestNGParallel012026/
 │   │   │   ├── CaptureHelper.java       # 📌 Bài 32: chụp màn hình (TakesScreenshot) + quay video (Monte Screen Recorder)
 │   │   │   └── SystemHelper.java        # Lấy đường dẫn thư mục gốc dự án (user.dir)
 │   │   ├── keywords/
-│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, chụp ảnh theo SCREENSHOT_ALL_STEPS, ghi Log4j2 + Extent Report
+│   │   │   ├── WebUI.java               # Bộ keyword Web dùng chung — lấy driver từ DriverManager, chụp ảnh theo SCREENSHOT_ALL_STEPS, ghi Log4j2 + Extent Report, @Step cho Allure
 │   │   │   ├── ActionKeyword.java       # Lớp keyword đời đầu (giữ lại từ các bài trước, không còn dùng)
 │   │   │   ├── MobileUI.java            # (placeholder) Keyword cho Mobile Automation — Appium
 │   │   │   └── APIKeyword.java          # (placeholder) Keyword cho API Automation — REST Assured
-│   │   ├── reports/                     # 📌 Bài 35 — ⚠️ đang bị `.gitignore` (dòng `reports/`) nuốt mất, xem lưu ý ở phần Bài 35
+│   │   ├── reports/                     # 📌 Bài 35 & 36 — ⚠️ đang bị `.gitignore` (dòng `reports/`) nuốt mất, xem lưu ý ở phần Bài 35
 │   │   │   ├── ExtentReportManager.java # Giữ 1 instance `ExtentReports` dùng chung cho cả run, gắn `ExtentSparkReporter`
-│   │   │   └── ExtentTestManager.java   # Giữ 1 `ExtentTest` riêng cho mỗi luồng (Map theo threadId) — log kèm ảnh
+│   │   │   ├── ExtentTestManager.java   # Giữ 1 `ExtentTest` riêng cho mỗi luồng (Map theo threadId) — log kèm ảnh
+│   │   │   └── AllureManager.java       # 📌 Bài 36: 2 hàm @Attachment — đính kèm text và ảnh chụp màn hình vào Allure Report
 │   │   └── utils/
 │   │       ├── JsonUtils.java           # Đọc/ghi test data ra file JSON trung gian (Gson)
 │   │       ├── ColorUtils.java          # Lấy mã màu HEX của pixel trên màn hình (từ Bài 12)
@@ -262,20 +272,35 @@ SeleniumTestNGParallel012026/
 │       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
 │       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
 │       │   │
-│       │   └── Bai35_ExtentReport/            # 📌 Bài 35: xuất báo cáo HTML bằng ExtentReports
-│       │       ├── pages/                     # Copy nguyên từ Bài 34, chỉ đổi package
+│       │   ├── Bai35_ExtentReport/            # 📌 Bài 35: xuất báo cáo HTML bằng ExtentReports
+│       │   │   ├── pages/                     # Copy nguyên từ Bài 34, chỉ đổi package
+│       │   │   │   ├── BasePage.java
+│       │   │   │   ├── LoginPage.java
+│       │   │   │   ├── DashboardPage.java
+│       │   │   │   ├── CustomersPage.java
+│       │   │   │   ├── ProjectsPage.java
+│       │   │   │   └── TasksPage.java
+│       │   │   └── testcases/
+│       │   │       ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 34, chỉ đổi package
+│       │   │       ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
+│       │   │       ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 34
+│       │   │       ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
+│       │   │       └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │   │
+│       │   └── Bai36_AllureReport/            # 📌 Bài 36: xuất báo cáo bằng Allure Report
+│       │       ├── pages/                     # Copy từ Bài 35 — mỗi hàm public gắn @Step mô tả bằng tiếng Việt
 │       │       │   ├── BasePage.java
 │       │       │   ├── LoginPage.java
 │       │       │   ├── DashboardPage.java
 │       │       │   ├── CustomersPage.java
 │       │       │   ├── ProjectsPage.java
 │       │       │   └── TasksPage.java
-│       │       └── testcases/
-│       │           ├── LoginTest.java         # 8 TC Login — giữ nguyên như Bài 34, chỉ đổi package
-│       │           ├── DashboardTest.java     # 4 TC — giữ nguyên như Bài 28
-│       │           ├── CustomersTest.java     # 3 TC — giữ nguyên như Bài 34
-│       │           ├── ProjectsTest.java      # 2 TC — giữ nguyên như Bài 28
-│       │           └── TasksTest.java         # 1 TC — giữ nguyên như Bài 28
+│       │       └── testcases/                 # Mỗi class gắn @Epic + @Feature, mỗi @Test gắn @Link/@Severity/@Description/@Owner
+│       │           ├── LoginTest.java         # 8 TC Login — có 1 TC cố tình fail để xem ảnh chụp trên report
+│       │           ├── DashboardTest.java     # 4 TC thống kê Dashboard
+│       │           ├── CustomersTest.java     # 3 TC: thêm mới + 2 cách xóa Customer
+│       │           ├── ProjectsTest.java      # 2 TC: thêm mới + xóa Project
+│       │           └── TasksTest.java         # 1 TC: thêm Task gắn với Project
 │       │
 │       └── resources/
 │           ├── configs/                 # 📌 Bài 29: file cấu hình
@@ -285,12 +310,13 @@ SeleniumTestNGParallel012026/
 │           │
 │           ├── suites/                  # TestNG Suite XML
 │           │   ├── Suite_Bai28_DriverManager_ParallelExecution.xml   # Chạy POM song song trên 2 trình duyệt
-│           │   ├── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config (suite mặc định trong pom.xml)
+│           │   ├── Suite_Bai29_PropertiesConfig.xml                  # Demo đọc config
 │           │   ├── Suite_Bai30_Excel_Data.xml                        # LoginTest lấy data Excel, chạy song song Chrome + Edge
 │           │   ├── Suite_Bai31_DataProvider.xml                      # DemoDataProviderPOM — bật data-provider-thread-count
 │           │   ├── Suite_Bai32_Screenshot_VideoRecord.xml            # CustomersTest có quay video — bắt buộc parallel="none"
 │           │   ├── Suite_Bai33_TestListener.xml                      # LoginTest — listener gắn ở BaseTest, <listeners> XML để comment
-│           │   └── Suite_Bai35_ExtentReport.xml                      # 3 thẻ <test> (Login / Dashboard+Customers / Customers) gộp vào 1 report
+│           │   ├── Suite_Bai35_ExtentReport.xml                      # 3 thẻ <test> (Login / Dashboard+Customers / Customers) gộp vào 1 report
+│           │   └── Suite_Bai36_AllureReport.xml                      # 5 thẻ <test> (Login / Dashboard / Customer / Project / Task) — suite mặc định trong pom.xml
 │           │
 │           └── testdata/
 │               ├── crm_data.xlsx            # 📌 Sheet Login (Bài 30) + sheet AddCustomer (Bài 31)
@@ -298,12 +324,15 @@ SeleniumTestNGParallel012026/
 │               ├── customer_data.json       # File JSON trung gian (tự sinh khi chạy test)
 │               └── project_data.json
 │
-├── exports/                         # 📌 Bài 32, 34 & 35: output hình ảnh/video/log/report (đã cho vào .gitignore)
+├── exports/                         # 📌 Bài 32, 34, 35 & 36: output hình ảnh/video/log/report (đã cho vào .gitignore)
 │   ├── screenshots/                 # Ảnh chụp màn hình — WebUI.takeScreenshot() & CaptureHelper.captureScreenshot()
 │   ├── videorecords/                # Video .avi — CaptureHelper.startRecord() / stopRecord()
 │   ├── logs/                        # 📌 Bài 34: applog.log — RollingFileAppender tự xoay theo ngày/dung lượng
-│   └── reports/extentreport/        # 📌 Bài 35: extentreport.html — mở trực tiếp bằng trình duyệt
+│   ├── reports/extentreport/        # 📌 Bài 35: extentreport.html — mở trực tiếp bằng trình duyệt
+│   └── reports/allure-report/       # 📌 Bài 36: index.html do `mvn allure:report` sinh ra (single file)
+├── .allure/                         # 📌 Bài 36: Allure 2 CLI do plugin allure-maven tự tải về (đã cho vào .gitignore)
 └── target/                          # Thư mục output (auto-generated)
+    └── allure-results/              # 📌 Bài 36: dữ liệu thô của Allure (JSON + file đính kèm) — mvn clean là mất
 ```
 
 ---
@@ -1521,6 +1550,257 @@ Mở trực tiếp bằng trình duyệt (không cần server) — biểu đồ 
 
 ---
 
+## 📖 Bài 36 — Allure Report
+
+> Extent Report (Bài 35) phải tự tay gọi `ExtentTestManager.logMessage(...)` ở từng keyword, và mỗi test case chỉ là một danh sách phẳng các dòng log. **Allure Report** đi theo hướng khác: gắn **annotation** lên method — `@Step` biến mỗi lần gọi hàm thành một **bước**, các bước lồng nhau đúng theo cây gọi hàm (test → page → keyword), còn `@Epic`, `@Feature`, `@Severity`, `@Link`... dùng để phân loại test case. Allure tự ghi lại kết quả, thời gian, tham số, file đính kèm, và dựng sẵn các tab Suites, Behaviors, Graphs, Timeline.
+
+> ⚠️ **Vẫn là cái bẫy `.gitignore` của Bài 35:** `AllureManager.java` nằm chung package `com.anhtester.reports`, nên dòng `reports/` trong `.gitignore` chặn luôn file này (`git check-ignore -v` báo `.gitignore:33:reports/`). Sửa `.gitignore` như hướng dẫn ở [Bài 35](#-bài-35--extent-report) trước khi commit.
+
+**Class trọng tâm**
+
+| File | Nội dung |
+| :--- | :--- |
+| `pom.xml` | Thêm `allure-testng`, `allure-attachments`, `aspectjweaver`. Surefire được cấu hình thêm `-javaagent` AspectJ, thư mục `allure-results` và `testFailureIgnore`. Thêm plugin `allure-maven` để dựng report mà không cần cài Allure trên máy. Suite mặc định đổi sang `Suite_Bai36_AllureReport.xml`. |
+| `reports/AllureManager.java` | 2 hàm `@Attachment`: `saveTextLog()` đính kèm một đoạn text, `saveScreenshotPNG()` đính kèm ảnh chụp màn hình. |
+| `keywords/WebUI.java` | 83 keyword gắn `@Step`. Các hàm lấy dữ liệu (`getElementText`, `getElementAttribute`, `getElementValue`...) đính kèm thêm giá trị lấy được bằng `AllureManager.saveTextLog()`. |
+| `listeners/TestListener.java` | `onTestFailure` gọi `AllureManager.saveScreenshotPNG()` — TC fail tự có ảnh chụp trong report. |
+| `Bai36_AllureReport/pages/` | Copy từ Bài 35, mỗi hàm public gắn `@Step` mô tả bằng tiếng Việt ("Điền Email {0}", "Click nút Login"...). |
+| `Bai36_AllureReport/testcases/` | Mỗi class gắn `@Epic` + `@Feature`, mỗi `@Test` gắn `@Link`, `@Severity`, `@Description`, `@Owner`. |
+| `suites/Suite_Bai36_AllureReport.xml` | 5 thẻ `<test>` (Login / Dashboard / Customer / Project / Task), đều chạy Chrome. |
+
+### Thêm thư viện và cấu hình Surefire
+
+```xml
+<dependency>
+   <groupId>io.qameta.allure</groupId>
+   <artifactId>allure-testng</artifactId>
+   <version>2.35.5</version>
+</dependency>
+<dependency>
+   <groupId>io.qameta.allure</groupId>
+   <artifactId>allure-attachments</artifactId>
+   <version>2.35.5</version>
+</dependency>
+<dependency>
+   <groupId>org.aspectj</groupId>
+   <artifactId>aspectjweaver</artifactId>
+   <version>1.9.25.1</version>
+</dependency>
+```
+
+```xml
+<plugin>
+   <groupId>org.apache.maven.plugins</groupId>
+   <artifactId>maven-surefire-plugin</artifactId>
+   <version>3.5.6</version>
+   <configuration>
+      <suiteXmlFiles>
+         <suiteXmlFile>src/test/resources/suites/Suite_Bai36_AllureReport.xml</suiteXmlFile>
+      </suiteXmlFiles>
+      <argLine>
+         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.25.1/aspectjweaver-1.9.25.1.jar"
+      </argLine>
+      <testFailureIgnore>true</testFailureIgnore>
+      <systemPropertyVariables>
+         <allure.results.directory>target/allure-results</allure.results.directory>
+      </systemPropertyVariables>
+   </configuration>
+</plugin>
+```
+
+- **`allure-testng` tự đăng ký listener.** Không cần khai báo trong `@Listeners` hay `<listeners>` như `TestListener` — thư viện tự khai báo listener `AllureTestNg` qua cơ chế `ServiceLoader` của TestNG, có trong classpath là tự chạy.
+- **`-javaagent` AspectJ là thứ làm cho `@Step` và `@Attachment` hoạt động.** Bản thân annotation không làm gì cả — AspectJ "dệt" (weave) thêm code vào method **lúc nạp class**, bọc quanh mỗi method có `@Step` để báo cho Allure "bắt đầu bước / kết thúc bước". Thiếu agent thì test vẫn chạy PASS/FAIL bình thường, report vẫn có danh sách test case, nhưng **Test body trống trơn** — không lỗi, không cảnh báo gì.
+- **Phiên bản trong đường dẫn `-javaagent` phải khớp `<version>` của dependency.** Nâng `aspectjweaver` lên bản mới mà quên sửa `argLine` → JVM không tìm thấy file jar và **không khởi động được** (Surefire báo lỗi fork VM). Nên khai báo một property `<aspectj.version>` rồi dùng `${aspectj.version}` ở cả hai chỗ cho khỏi lệch.
+- **`testFailureIgnore=true`** — có TC fail thì `mvn test` vẫn kết thúc `BUILD SUCCESS`. Cần cho CI: build không dừng ở bước test, nên bước sau (sinh Allure report) vẫn chạy được để xem **vì sao** fail. Đổi lại, thấy `BUILD SUCCESS` không còn nghĩa là mọi test đều pass — phải mở report ra xem.
+- **TestNG được đổi từ 7.12.0 về 7.4.0** trong cùng lần sửa `pom.xml` này.
+
+### `AllureManager` — đính kèm text và ảnh
+
+```java
+public class AllureManager {
+   @Attachment(value = "{0}", type = "text/plain")
+   public static String saveTextLog(String message) {
+      return message;
+   }
+
+   @Attachment(value = "Page screenshot", type = "image/png")
+   public static byte[] saveScreenshotPNG() {
+      return ((TakesScreenshot) DriverManager.getDriver()).getScreenshotAs(OutputType.BYTES);
+   }
+}
+```
+
+> **Giá trị `return` chính là nội dung file đính kèm.** Hàm `@Attachment` không tự ghi file — AspectJ bắt lấy giá trị trả về, lưu vào `allure-results` và gắn vào **bước đang chạy** ở thời điểm gọi. `value = "{0}"` đặt tên attachment bằng chính tham số đầu tiên, nên với `saveTextLog("==> TEXT: Login")` thì tên và nội dung giống hệt nhau — nhìn tên attachment trên report là đọc được giá trị luôn, không cần bấm mở.
+>
+> Ảnh dùng `OutputType.BYTES` thay vì `BASE64` như Extent (Bài 35) — Allure tự lưu mảng byte thành file `.png` riêng trong `allure-results`.
+
+### `@Step` trên keyword `WebUI`
+
+```java
+@Step("Click on element {0}")
+public static void clickElement(By by) { ... }
+
+@Step("Set text {1} on element {0}")
+public static void setText(By by, String value) { ... }
+
+@Step("Get text of element {0}")
+public static String getElementText(By by) {
+   ...
+   AllureManager.saveTextLog("==> TEXT: " + text);   // giá trị lấy được hiện ngay dưới bước này
+   return text;
+}
+```
+
+`{0}`, `{1}` là **vị trí tham số** của method — Allure thay bằng `toString()` của tham số tương ứng, ví dụ `Click on element By.xpath: //button[normalize-space()='Login']`.
+
+**Không phải hàm nào cũng nên là một bước.** Mỗi `@Step` là một dòng trên report và các bước lồng được vào nhau — `clickElement` gọi `waitForElementClickable` bên trong, nếu cả hai cùng có `@Step` thì **mọi** cú click đều kéo theo một bước con "Wait for…". Bài này **cố ý không gắn** `@Step` cho:
+
+| Nhóm | Lý do |
+| :--- | :--- |
+| Toàn bộ nhóm `waitFor...` (kể cả `waitForPageLoaded`) | Được gọi ngầm bên trong gần như mọi keyword khác → số bước tăng gấp đôi mà không thêm thông tin. Chờ timeout thì `Assert.fail` vẫn làm fail đúng bước cha đang gọi nó. |
+| `getPageTitle`, `getCurrentURL` | Gọi rất dày trong các hàm `verifyNavigate...`, không mang thông tin nghiệp vụ. |
+| `retryWait`, `retryUntil`, `sleep`, `getWebElement(s)`, `smartWait` | Hàm hạ tầng. `retryUntil` nhận lambda nên tên bước chỉ là một chuỗi vô nghĩa. |
+| Overload chỉ gọi sang bản đầy đủ (`isElementVisible(by)`, `checkCheckbox`, `setWindowSizeDesktop`...) | Chỉ bản đầy đủ có `@Step`, tránh hai bước giống hệt nhau lồng vào nhau. |
+
+### `@Step` ở tầng Page — report đọc được như kịch bản test
+
+```java
+@Step("Điền Email {0}")
+private void setEmail(String email) {
+   WebUI.setText(inputEmail, email);
+}
+
+@Step("Click nút Login")
+private void clickLoginButton() {
+   WebUI.clickElement(buttonLogin);
+}
+
+@Step("Đăng nhập CRM với Email {0}")
+public DashboardPage loginCRM(String email, String password) { ... }
+```
+
+Bước của page bọc bước của `WebUI`, nên trên report mỗi test case hiện thành một cây — tầng trên là ngôn ngữ nghiệp vụ, mở ra mới thấy thao tác kỹ thuật:
+
+```
+Đăng nhập CRM với Email admin@example.com
+├── Open URL: https://crm.anhtester.com/admin/authentication
+├── Kiểm tra đã đến được trang Login
+│   └── Get text of element By.xpath: //h1[normalize-space()='Login']
+│       └── 📎 ==> TEXT: Login
+├── Điền Email admin@example.com
+│   └── Set text admin@example.com on element By.xpath: //input[@id='email']
+├── Điền Password 123456
+│   └── Set text 123456 on element By.xpath: //input[@id='password']
+└── Click nút Login
+    └── Click on element By.xpath: //button[normalize-space()='Login']
+```
+
+- **`@Step` gắn được cả lên method `private`** — `setEmail`, `setPassword`, `clickLoginButton` đều `private` mà vẫn thành bước. AspectJ dệt code thẳng vào thân method lúc nạp class, không đi qua proxy như Spring AOP nên không bị giới hạn ở method `public`.
+- **Các hàm `private` hỗ trợ như `selectPickerByText`, `getDeleteCustomerLink` không gắn `@Step`** — bên ngoài chúng đã có bước của hàm public bọc lại ("Chọn Default Currency USD"...).
+
+### Annotation mô tả ở test case
+
+```java
+@Epic("Xác thực người dùng")
+@Feature("Đăng nhập với thông tin điền vào")
+public class LoginTest extends BaseTest {
+
+   @Link(name = "DEV-5853", url = "https://slope.atlassian.net/browse/DEV-5853")
+   @Severity(SeverityLevel.CRITICAL)
+   @Description("Đăng nhập thành công với thông tin hợp lệ")
+   @Owner("Anh Tester")
+   @Test(priority = 1, dataProvider = "data_login", dataProviderClass = DataProviderFactory.class)
+   public void testLoginCRM_Success(Hashtable<String, String> data) { ... }
+}
+```
+
+| Annotation | Hiện ở đâu trên report |
+| :--- | :--- |
+| `@Epic`, `@Feature` (thêm `@Story` nếu cần tầng thứ 3) | Tab **Behaviors** — gom test case theo cây Epic → Feature → Story thay vì theo class/package |
+| `@Severity` | Biểu đồ Severity ở tab **Graphs** + bộ lọc. 5 mức: `BLOCKER`, `CRITICAL`, `NORMAL`, `MINOR`, `TRIVIAL` |
+| `@Description` | Khung mô tả ở đầu trang chi tiết test case |
+| `@Owner` | Dòng Owner — ai chịu trách nhiệm test case này |
+| `@Link` | Link bấm được, trỏ sang ticket Jira |
+
+| Class | `@Epic` | `@Feature` | Số TC |
+| :--- | :--- | :--- | :-: |
+| `LoginTest` | Xác thực người dùng | Đăng nhập với thông tin điền vào | 8 |
+| `DashboardTest` | Dashboard | Thống kê tổng quan trên Dashboard | 4 |
+| `CustomersTest` | Quản lý khách hàng | Thêm mới và xoá khách hàng | 3 |
+| `ProjectsTest` | Quản lý dự án | Thêm mới và xoá dự án | 2 |
+| `TasksTest` | Quản lý công việc | Thêm mới công việc | 1 |
+
+> Mã ticket `DEV-5853` → `DEV-5870` trong `@Link` chỉ để minh họa, thay bằng ticket thật của dự án khi áp dụng.
+
+### Sinh và xem report
+
+`mvn test` chỉ tạo **dữ liệu thô** (`target/allure-results/*.json` + file đính kèm), chưa phải trang HTML. Phải có **Allure CLI** để dựng thành report — và thay vì bắt mỗi máy tự cài Allure rồi set biến môi trường `ALLURE_HOME`/`PATH`, repo khai báo luôn Allure CLI trong `pom.xml` bằng plugin **`allure-maven`**:
+
+```xml
+<plugin>
+   <groupId>io.qameta.allure</groupId>
+   <artifactId>allure-maven</artifactId>
+   <version>2.17.0</version>
+   <configuration>
+      <reportVersion>2.46.1</reportVersion>                                         <!-- phiên bản Allure 2 CLI -->
+      <installDirectory>${project.basedir}/.allure</installDirectory>                <!-- nơi giải nén CLI, nằm trong repo -->
+      <resultsDirectory>allure-results</resultsDirectory>                            <!-- tính từ target/ -->
+      <reportDirectory>${project.basedir}/exports/reports/allure-report</reportDirectory>
+      <singleFile>true</singleFile>                                                  <!-- gộp report thành 1 file index.html -->
+   </configuration>
+</plugin>
+```
+
+```bash
+# Chạy test rồi dựng report ngay trong một lệnh → exports/reports/allure-report/index.html
+mvn clean test allure:report
+```
+
+```bash
+# Dựng report từ allure-results sẵn có (không chạy lại test)
+mvn allure:report
+```
+
+```bash
+# Dựng report tạm rồi tự mở trình duyệt (Allure bật sẵn web server)
+mvn allure:serve
+```
+
+Lần đầu chạy, plugin tải gói `allure-commandline` 2.46.1 từ Maven Central (về `~/.m2` như mọi dependency khác) rồi giải nén vào **`.allure/allure-2.46.1/`** ngay trong thư mục dự án. Từ lần sau dùng lại luôn, không tải nữa. Nhờ vậy clone repo sang máy khác chỉ cần **Java + Maven** — đúng những thứ dự án vốn đã cần — là dựng được report.
+
+- **`.allure/` được cho vào `.gitignore`** — thư mục này nặng khoảng 33MB và tải lại được bất cứ lúc nào từ cấu hình trong `pom.xml`, nên không commit lên Git. Muốn đổi phiên bản Allure thì chỉ sửa `<reportVersion>`, plugin tự tải bản mới vào `.allure/allure-<version>/`.
+- **Không phụ thuộc Allure cài sẵn trên máy.** Plugin gọi thẳng `.allure/allure-2.46.1/bin/allure` (`allure.bat` trên Windows), không đọc `PATH` hay `ALLURE_HOME`. Máy có cài Allure bản khác cũng không bị lẫn.
+- **Chạy từ IntelliJ:** mở tab **Maven** → **Plugins** → **allure** → nhấp đúp `allure:report` hoặc `allure:serve`.
+- **`mvn clean` không xóa `.allure/`** vì thư mục này nằm ngoài `target/` — `mvn clean test allure:report` không phải tải lại CLI.
+
+> **Vì sao bật `singleFile`:** report Allure mặc định là một thư mục gồm `index.html` + rất nhiều file JSON, trang HTML dùng `fetch` để nạp các file JSON đó — trình duyệt chặn `fetch` trên giao thức `file://`, nên nhấp đúp mở `index.html` sẽ chỉ thấy "Loading..." mãi. `singleFile` (tương đương cờ `--single-file` của CLI) nhồi toàn bộ dữ liệu vào **một** file HTML, mở offline được giống `extentreport.html` của Bài 35. Plugin còn sinh kèm `allure-maven.html` và vài thư mục `css/`, `js/`... cho trang Maven Site — không cần quan tâm, mở `index.html` là đủ.
+>
+> **`target/allure-results` bị xóa sạch khi `mvn clean`.** Ngược lại, chạy `mvn test` nhiều lần mà **không** `clean` thì kết quả các lần chạy **cộng dồn** trong thư mục này — report sẽ hiện mỗi test case kèm các lần chạy trước ở mục **Retries**. Muốn report chỉ phản ánh lần chạy mới nhất thì chạy `mvn clean test`.
+
+**Kiến thức chính:**
+
+- **Tham số của DataProvider hiện tên là `arg0`** ở mục Parameters của test case. Java mặc định **không giữ tên tham số** trong file `.class`, Allure đọc bằng reflection nên chỉ thấy `arg0`, `arg1`... Bật cờ `-parameters` cho trình biên dịch thì report hiện đúng tên `data`:
+
+  ```xml
+  <plugin>
+     <groupId>org.apache.maven.plugins</groupId>
+     <artifactId>maven-compiler-plugin</artifactId>
+     <configuration>
+        <parameters>true</parameters>
+     </configuration>
+  </plugin>
+  ```
+
+- **Allure chạy song song không cần làm gì thêm.** Khác với `ExtentTestManager` phải tự dựng `Map` theo `threadId` (Bài 35), `AllureLifecycle` bên trong đã tách trạng thái theo từng luồng — `@Step` của luồng nào ghi đúng vào test case của luồng đó.
+
+- **Allure và Extent đang chạy song song trong cùng một lần chạy.** `WebUI` vẫn giữ các lời gọi `ExtentTestManager.logMessage(...)` của Bài 35, `TestListener` vẫn tạo Extent test và `flush()` — một lần `mvn test` sinh ra **cả hai** report. Nếu dự án chỉ dùng Allure thì có thể gỡ phần Extent đi cho `WebUI` gọn hơn.
+
+- **`@Link` viết full URL ở từng TC thì đổi domain Jira phải sửa hàng loạt.** Allure hỗ trợ file `src/test/resources/allure.properties` với dòng `allure.link.issue.pattern=https://slope.atlassian.net/browse/{}`, sau đó mỗi TC chỉ cần `@Issue("DEV-5853")`.
+
+- **`@Description` của Allure không thay cho `@Test(description)`.** `TestListener.getTestDescription()` (Bài 35) vẫn đọc `@Test(description = ...)`, nên bên Extent Report cột mô tả vẫn trùng tên method — hai report lấy mô tả từ hai nguồn khác nhau.
+
+---
+
 ## 🧰 Bộ keyword WebUI
 
 `WebUI` giữ nguyên toàn bộ **122 hàm** đã xây dựng từ Bài 24 → 26, chỉ thay nguồn lấy driver: từ biến `static` sang `DriverManager.getDriver()`.
@@ -1549,6 +1829,8 @@ Mở trực tiếp bằng trình duyệt (không cần server) — biểu đồ 
 | **Tiện ích** | `sleep`, `smartWait` |
 
 > 📌 **Bài 34:** `logConsole()` đã bị xóa khỏi `WebUI` — mọi lời gọi log trong `WebUI` (chờ timeout, không tìm thấy element...) đổi sang `LogUtils.info()`/`LogUtils.error()`, xem [Bài 34](#-bài-34--log4j2-logging).
+>
+> 📌 **Bài 36:** 83 keyword gắn `@Step` để hiện thành bước trong Allure Report — trừ nhóm `waitFor...`, `getPageTitle`, `getCurrentURL` và các hàm hạ tầng, xem [Bài 36](#-bài-36--allure-report).
 >
 > Giải thích chi tiết từng nhóm (vì sao cần `retryUntil`, bẫy `getAttribute("value")`, `setTextByJS` phải bắn event...) nằm ở phần Bài 24 & 25 của repo chính.
 
@@ -1590,7 +1872,7 @@ String customerName = JsonUtils.getValueFromJsonFile(ConfigData.CUSTOMER_DATA_FI
 
 ```bash
 # Chạy suite mặc định đã khai báo trong pom.xml
-# = demo đọc Properties Config của Bài 29
+# = Bài 36 — 5 thẻ <test> ghi kết quả ra target/allure-results
 mvn test
 ```
 
@@ -1637,6 +1919,17 @@ mvn test "-Dsurefire.suiteXmlFiles=src/test/resources/suites/Suite_Bai35_ExtentR
 ```
 
 ```bash
+# = Bài 36 — chạy sạch từ đầu rồi dựng Allure Report thành 1 file index.html
+# Không cần cài Allure: plugin allure-maven tự tải Allure 2 CLI vào .allure/ ở lần chạy đầu
+mvn clean test allure:report
+```
+
+```bash
+# Hoặc xem nhanh Allure Report qua web server tạm, không cần xuất file
+mvn allure:serve
+```
+
+```bash
 # Chạy một class cụ thể (tuần tự, Chrome mặc định)
 mvn test "-Dtest=CustomersTest"
 ```
@@ -1662,12 +1955,16 @@ mvn clean test
 - Video quay màn hình: `exports/videorecords/` (chỉ có khi bật `VIDEO_RECORD_ACTIVE = true`)
 - Log Log4j2: `exports/logs/applog.log` (📌 Bài 34 — tự xoay file theo ngày/dung lượng)
 - Báo cáo HTML: `exports/reports/extentreport/extentreport.html` (📌 Bài 35 — mở bằng trình duyệt, có ảnh chụp kèm theo)
+- Dữ liệu Allure: `target/allure-results/` (📌 Bài 36 — dữ liệu thô, dựng thành report bằng `mvn allure:report`)
+- Allure Report: `exports/reports/allure-report/index.html` (📌 Bài 36 — sinh bằng `mvn allure:report`, mở trực tiếp bằng trình duyệt)
 
 > Từ Bài 33, việc chụp ảnh / quay video do `TestListener` lo — bật tắt bằng 4 key `SCREENSHOT_PASSED_STEP`, `SCREENSHOT_FAILED_STEP`, `SCREENSHOT_ALL_STEPS`, `VIDEO_RECORD_ACTIVE` trong `config.properties`, không phải sửa code.
 >
 > Từ Bài 34, mọi `System.out.println` trong framework đã đổi sang `LogUtils` — console vẫn thấy log như trước, nhưng giờ có thêm bản lưu file kèm timestamp và mức độ (`INFO`/`WARN`/`ERROR`).
 >
 > Từ Bài 35, `TestListener` còn ghi thêm mỗi test case thành một mục trong Extent Report kèm ảnh chụp khi fail — nhớ sửa `.gitignore` (xem lưu ý ⚠️ ở [Bài 35](#-bài-35--extent-report)) trước khi commit, không thì code của bài này không lên được Git.
+>
+> Từ Bài 36, `pom.xml` bật `testFailureIgnore` — có TC fail thì `mvn test` vẫn báo `BUILD SUCCESS`, phải xem Allure Report để biết kết quả thật.
 
 ---
 

@@ -5,9 +5,11 @@ import static com.anhtester.drivers.DriverManager.*;
 
 import com.anhtester.drivers.DriverManager;
 import com.anhtester.helpers.CaptureHelper;
+import com.anhtester.reports.AllureManager;
 import com.anhtester.reports.ExtentTestManager;
 import com.anhtester.utils.LogUtils;
 import com.aventstack.extentreports.Status;
+import io.qameta.allure.Step;
 import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.*;
@@ -95,6 +97,7 @@ public class WebUI {
       return searchSelectPickerOption(buttonDropdown, searchBox, option, keyword, maxRetries, SEARCH_TIMEOUT);
    }
 
+   @Step("Search {3} in select picker {0} and wait for option {2}")
    public static WebElement searchSelectPickerOption(By buttonDropdown, By searchBox, By option, String keyword, int maxRetries, int timeOutPerTry) {
       for (int attempt = 1; attempt <= maxRetries; attempt++) {
          openDropdownIfClosed(buttonDropdown, searchBox);
@@ -340,6 +343,7 @@ public class WebUI {
     * @param by Represent a web element as the By object
     * @return true/false
     */
+   @Step("Check element {0} exists")
    public static boolean checkElementExist(By by) {
       boolean result = false;
 
@@ -355,6 +359,7 @@ public class WebUI {
    }
 
    // Hàm kiểm tra sự tồn tại của phần tử với lặp lại nhiều lần dùng FluentWait
+   @Step("Check element {0} exists with {1} retries, polling every {2} ms")
    public static boolean checkElementExist(By by, int maxRetries, int waitTimeMillis) {
       LogUtils.info("Kiểm tra tồn tại phần tử với retry: " + by);
 
@@ -382,6 +387,7 @@ public class WebUI {
       return false;
    }
 
+   @Step("Open URL: {0}")
    public static void openURL(String url) {
       DriverManager.getDriver().get(url);
       sleep(STEP_TIME);
@@ -395,6 +401,7 @@ public class WebUI {
       return DriverManager.getDriver().getCurrentUrl();
    }
 
+   @Step("Click on element {0}")
    public static void clickElement(By by) {
       waitForElementClickable(by);
       sleep(STEP_TIME);
@@ -412,6 +419,7 @@ public class WebUI {
       }
    }
 
+   @Step("Click on element {0} with timeout {1}")
    public static void clickElement(By by, int timeout) {
       waitForElementClickable(by, timeout);
       sleep(STEP_TIME);
@@ -433,6 +441,7 @@ public class WebUI {
     * phần chữ đã gõ dở, cho ra chuỗi kiểu "helhello". Clear trước thì gõ lại bao nhiêu lần
     * kết quả vẫn đúng bằng value.
     */
+   @Step("Set text {1} on element {0}")
    public static void setText(By by, String value) {
       waitForElementVisible(by);
       sleep(STEP_TIME);
@@ -450,6 +459,7 @@ public class WebUI {
       }
    }
 
+   @Step("Set text {1} on element {0}")
    public static void setTextAndKey(By by, String value, Keys key) {
       waitForPageLoaded();
 
@@ -472,6 +482,7 @@ public class WebUI {
       }
    }
 
+   @Step("Get text of element {0}")
    public static String getElementText(By by) {
       waitForElementVisible(by);
       sleep(STEP_TIME);
@@ -482,6 +493,8 @@ public class WebUI {
       ExtentTestManager.logMessage(Status.INFO, "Get text of element " + by);
       ExtentTestManager.logMessage(Status.INFO, "==> TEXT: " + text);
 
+      AllureManager.saveTextLog("==> TEXT: " + text);
+
       if(ConfigData.SCREENSHOT_ALL_STEPS.equalsIgnoreCase("true")){
          CaptureHelper.captureScreenshot("getElementText");
       }
@@ -489,6 +502,7 @@ public class WebUI {
       return text; //Trả về một giá trị kiểu String
    }
 
+   @Step("Get attribute {1} of element {0}")
    public static String getElementAttribute(By by, String attributeName) {
       waitForElementVisible(by);
       LogUtils.info("Get attribute " + attributeName + " of element " + by);
@@ -499,14 +513,18 @@ public class WebUI {
       ExtentTestManager.logMessage(Status.INFO, "Get attribute " + attributeName + " of element " + by);
       ExtentTestManager.logMessage(Status.INFO, "==> Attribute value: " + value);
 
+      AllureManager.saveTextLog("==> Attribute value: " + value);
+
       return value;
    }
 
+   @Step("Get CSS value {1} of element {0}")
    public static String getElementCssValue(By by, String cssPropertyName) {
       waitForElementVisible(by);
       LogUtils.info("Get CSS value " + cssPropertyName + " of element " + by);
       String value = retryUntil(_driver -> _driver.findElement(by).getCssValue(cssPropertyName));
       LogUtils.info("==> CSS value: " + value);
+      AllureManager.saveTextLog("==> CSS value: " + value);
 
       ExtentTestManager.logMessage(Status.INFO, "Get CSS value " + cssPropertyName + " of element " + by);
       ExtentTestManager.logMessage(Status.INFO, "==> CSS value: " + value);
@@ -519,31 +537,37 @@ public class WebUI {
       sleep(STEP_TIME);
    }
 
+   @Step("Scroll to element {0}")
    public static void scrollToElement(By by) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(false);", getWebElement(by));
    }
 
+   @Step("Scroll to element {0}")
    public static void scrollToElement(WebElement element) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(false);", element);
    }
 
+   @Step("Scroll to element {0} at top")
    public static void scrollToElementAtTop(By by) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(true);", getWebElement(by));
    }
 
+   @Step("Scroll to element {0} at bottom")
    public static void scrollToElementAtBottom(By by) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(false);", getWebElement(by));
    }
 
+   @Step("Scroll to element {0} at top")
    public static void scrollToElementAtTop(WebElement element) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(true);", element);
    }
 
+   @Step("Scroll to element {0} at bottom")
    public static void scrollToElementAtBottom(WebElement element) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("arguments[0].scrollIntoView(false);", element);
@@ -554,6 +578,7 @@ public class WebUI {
     *
     * @param by Represent a web element as the By object
     */
+   @Step("Scroll to element {0} at center")
    public static void scrollToElementAtCenter(By by) {
       smartWait();
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
@@ -568,6 +593,7 @@ public class WebUI {
     *
     * @param webElement Represent a web element as the By object
     */
+   @Step("Scroll to element {0} at center")
    public static void scrollToElementAtCenter(WebElement webElement) {
       smartWait();
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
@@ -577,11 +603,13 @@ public class WebUI {
       LogUtils.info("Scroll to element completely centered: " + webElement);
    }
 
+   @Step("Scroll to position X: {0}, Y: {1}")
    public static void scrollToPosition(int X, int Y) {
       JavascriptExecutor js = (JavascriptExecutor) DriverManager.getDriver();
       js.executeScript("window.scrollTo(" + X + "," + Y + ");");
    }
 
+   @Step("Move to element {0}")
    public static boolean moveToElement(By by) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -593,6 +621,7 @@ public class WebUI {
       }
    }
 
+   @Step("Move to offset X: {0}, Y: {1}")
    public static boolean moveToOffset(int X, int Y) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -604,6 +633,7 @@ public class WebUI {
       }
    }
 
+   @Step("Hover on element {0}")
    public static boolean hoverElement(By by) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -614,6 +644,7 @@ public class WebUI {
       }
    }
 
+   @Step("Mouse hover on element {0}")
    public static boolean mouseHover(By by) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -624,6 +655,7 @@ public class WebUI {
       }
    }
 
+   @Step("Drag and drop element {0} to element {1}")
    public static boolean dragAndDrop(By fromElement, By toElement) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -636,6 +668,7 @@ public class WebUI {
       }
    }
 
+   @Step("Drag and drop element {0} to element {1}")
    public static boolean dragAndDropElement(By fromElement, By toElement) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -647,6 +680,7 @@ public class WebUI {
       }
    }
 
+   @Step("Drag and drop element {0} by offset X: {1}, Y: {2}")
    public static boolean dragAndDropOffset(By fromElement, int X, int Y) {
       try {
          Actions action = new Actions(DriverManager.getDriver());
@@ -659,6 +693,7 @@ public class WebUI {
       }
    }
 
+   @Step("Press ENTER")
    public static boolean pressENTER() {
       try {
          Robot robot = new Robot();
@@ -670,6 +705,7 @@ public class WebUI {
       }
    }
 
+   @Step("Press ESC")
    public static boolean pressESC() {
       try {
          Robot robot = new Robot();
@@ -681,6 +717,7 @@ public class WebUI {
       }
    }
 
+   @Step("Press F11")
    public static boolean pressF11() {
       try {
          Robot robot = new Robot();
@@ -696,6 +733,7 @@ public class WebUI {
     * @param by truyền vào đối tượng element dạng By
     * @return Tô màu viền đỏ cho Element trên website
     */
+   @Step("Highlight element {0}")
    public static WebElement highLightElement(By by) {
       // Tô màu border ngoài chính element chỉ định - màu đỏ (có thể đổi màu khác)
       if (DriverManager.getDriver() instanceof JavascriptExecutor) {
@@ -705,30 +743,38 @@ public class WebUI {
       return getWebElement(by);
    }
 
+   @Step("Accept alert")
    public static void acceptAlert() {
       waitForAlertIsPresent();
       Alert alert = DriverManager.getDriver().switchTo().alert();
       alert.accept();
    }
 
+   @Step("Dismiss alert")
    public static void dismissAlert() {
       waitForAlertIsPresent();
       Alert alert = DriverManager.getDriver().switchTo().alert();
       alert.dismiss();
    }
 
+   @Step("Get text on alert")
    public static String getTextOnAlert() {
       waitForAlertIsPresent();
       Alert alert = DriverManager.getDriver().switchTo().alert();
-      return alert.getText();
+      String text = alert.getText();
+      LogUtils.info("==> Alert text: " + text);
+      AllureManager.saveTextLog("==> Alert text: " + text);
+      return text;
    }
 
+   @Step("Set text {0} on alert")
    public static void setTextOnAlert(String text) {
       waitForAlertIsPresent();
       Alert alert = DriverManager.getDriver().switchTo().alert();
       alert.sendKeys(text);
    }
 
+   @Step("Verify equals: {0} and {1}")
    public static boolean verifyEquals(Object actual, Object expected) {
       LogUtils.info("Verify equals: " + actual + " and " + expected);
       ExtentTestManager.logMessage(Status.INFO, "Verify equals: " + actual + " and " + expected);
@@ -743,6 +789,7 @@ public class WebUI {
       return check;
    }
 
+   @Step("Assert equals: {0} and {1}")
    public static void assertEquals(Object actual, Object expected, String message) {
       LogUtils.info("Assert equals: " + actual + " \uD83D\uDFF0 " + expected);
       ExtentTestManager.logMessage(Status.INFO, "Assert equals: " + actual + " \uD83D\uDFF0 " + expected);
@@ -761,6 +808,7 @@ public class WebUI {
       Assert.assertEquals(actual, expected, message);
    }
 
+   @Step("Verify contains: {0} and {1}")
    public static boolean verifyContains(String actual, String expected) {
       LogUtils.info("Verify contains: " + actual + " and " + expected);
       ExtentTestManager.logMessage(Status.INFO, "Verify contains: " + actual + " and " + expected);
@@ -768,6 +816,7 @@ public class WebUI {
       return check;
    }
 
+   @Step("Assert contains: {0} and {1}")
    public static void assertContains(String actual, String expected, String message) {
       LogUtils.info("Assert contains: " + actual + " and " + expected);
       ExtentTestManager.logMessage(Status.INFO, "Assert contains: " + actual + " and " + expected);
@@ -788,6 +837,7 @@ public class WebUI {
     * Dropdown do plugin javascript vẽ ra (selectpicker, select2...) KHÔNG phải thẻ <select>,
     * phải bấm mở rồi bấm chọn như element thường - xem searchSelectPickerOption().
     */
+   @Step("Select option by text {1} on element {0}")
    public static void selectOptionByText(By by, String text) {
       waitForElementVisible(by);
       sleep(STEP_TIME);
@@ -798,6 +848,7 @@ public class WebUI {
       LogUtils.info("Select option by text '" + text + "' on element " + by);
    }
 
+   @Step("Select option by value {1} on element {0}")
    public static void selectOptionByValue(By by, String value) {
       waitForElementVisible(by);
       sleep(STEP_TIME);
@@ -808,6 +859,7 @@ public class WebUI {
       LogUtils.info("Select option by value '" + value + "' on element " + by);
    }
 
+   @Step("Select option by index {1} on element {0}")
    public static void selectOptionByIndex(By by, int index) {
       waitForElementVisible(by);
       sleep(STEP_TIME);
@@ -818,10 +870,12 @@ public class WebUI {
       LogUtils.info("Select option by index " + index + " on element " + by);
    }
 
+   @Step("Get selected option text of element {0}")
    public static String getSelectedOptionText(By by) {
       waitForElementVisible(by);
       String text = retryUntil(_driver -> new Select(_driver.findElement(by)).getFirstSelectedOption().getText());
       LogUtils.info("==> Selected option: " + text);
+      AllureManager.saveTextLog("==> Selected option: " + text);
       return text;
    }
 
@@ -829,6 +883,7 @@ public class WebUI {
     * Lấy toàn bộ chữ hiển thị của các option trong dropdown.
     * Dùng để kiểm tra danh sách lựa chọn có đủ và đúng thứ tự hay không.
     */
+   @Step("Get all options text of element {0}")
    public static List<String> getAllOptionsText(By by) {
       waitForElementVisible(by);
       List<String> options = retryUntil(_driver -> {
@@ -839,6 +894,7 @@ public class WebUI {
          return result;
       });
       LogUtils.info("==> Có " + options.size() + " option: " + options);
+      AllureManager.saveTextLog("==> Có " + options.size() + " option: " + options);
       return options;
    }
 
@@ -860,6 +916,7 @@ public class WebUI {
     * LƯU Ý: nhiều giao diện ẩn thẻ input thật và chỉ hiện thẻ label được tô vẽ đè lên,
     * trường hợp đó bấm vào input sẽ không ăn - hãy truyền By của label, hoặc dùng clickElementByJS().
     */
+   @Step("Set checkbox {0} to checked = {1}")
    public static void setCheckboxState(By by, boolean expectedChecked) {
       waitForElementPresent(by);
       sleep(STEP_TIME);
@@ -874,6 +931,7 @@ public class WebUI {
       LogUtils.info((expectedChecked ? "Check" : "Uncheck") + " checkbox " + by);
    }
 
+   @Step("Select radio button {0}")
    public static void selectRadioButton(By by) {
       waitForElementPresent(by);
       sleep(STEP_TIME);
@@ -899,6 +957,7 @@ public class WebUI {
       return isElementVisible(by, EXPLICIT_WAIT_TIMEOUT);
    }
 
+   @Step("Check element {0} is visible with timeout {1}")
    public static boolean isElementVisible(By by, int timeOut) {
       try {
          WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(timeOut), Duration.ofMillis(500));
@@ -913,6 +972,7 @@ public class WebUI {
       return isElementClickable(by, EXPLICIT_WAIT_TIMEOUT);
    }
 
+   @Step("Check element {0} is clickable with timeout {1}")
    public static boolean isElementClickable(By by, int timeOut) {
       try {
          WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(timeOut), Duration.ofMillis(500));
@@ -923,6 +983,7 @@ public class WebUI {
       }
    }
 
+   @Step("Check element {0} is enabled")
    public static boolean isElementEnabled(By by) {
       try {
          return getWebElement(by).isEnabled();
@@ -934,6 +995,7 @@ public class WebUI {
    /**
     * Kiểm tra checkbox hoặc radio button đang được chọn hay không.
     */
+   @Step("Check element {0} is selected")
    public static boolean isElementSelected(By by) {
       try {
          return getWebElement(by).isSelected();
@@ -948,6 +1010,7 @@ public class WebUI {
     * Lấy chữ của TẤT CẢ element khớp locator, ví dụ toàn bộ tên khách hàng trong một cột.
     * Trả về danh sách rỗng nếu không có element nào khớp, không làm fail test.
     */
+   @Step("Get text of all elements {0}")
    public static List<String> getAllElementsText(By by) {
       List<String> texts = retryUntil(_driver -> {
          List<String> result = new ArrayList<>();
@@ -957,12 +1020,15 @@ public class WebUI {
          return result;
       });
       LogUtils.info("==> Text của " + texts.size() + " element " + by + ": " + texts);
+      AllureManager.saveTextLog("==> Text của " + texts.size() + " element " + by + ": " + texts);
       return texts;
    }
 
+   @Step("Get count of elements {0}")
    public static int getElementCount(By by) {
       int count = getWebElements(by).size();
       LogUtils.info("==> Số lượng element " + by + ": " + count);
+      AllureManager.saveTextLog("==> Số lượng element " + by + ": " + count);
       return count;
    }
 
@@ -971,27 +1037,32 @@ public class WebUI {
     * Khác với getElementAttribute("value"): hàm đó đọc thuộc tính value viết trong HTML gốc,
     * nên với ô input người dùng vừa gõ nó vẫn trả về giá trị ban đầu chứ không phải giá trị mới.
     */
+   @Step("Get value of element {0}")
    public static String getElementValue(By by) {
       waitForElementVisible(by);
       String value = retryUntil(_driver -> Optional.ofNullable(_driver.findElement(by).getDomProperty("value")))
               .orElse("");
       LogUtils.info("==> Value: " + value);
+      AllureManager.saveTextLog("==> Value: " + value);
       return value;
    }
 
    /**
     * Đọc đúng thuộc tính viết trong HTML gốc, ví dụ href, placeholder, data-id.
     */
+   @Step("Get DOM attribute {1} of element {0}")
    public static String getElementDomAttribute(By by, String attributeName) {
       waitForElementVisible(by);
       String value = retryUntil(_driver -> Optional.ofNullable(_driver.findElement(by).getDomAttribute(attributeName)))
               .orElse(null);
       LogUtils.info("==> DOM attribute " + attributeName + ": " + value);
+      AllureManager.saveTextLog("==> DOM attribute " + attributeName + ": " + value);
       return value;
    }
 
    //==================== Thao tác bằng Javascript - dùng khi cách thường không ăn ====================
 
+   @Step("Execute JavaScript: {0}")
    public static Object executeJS(String script, Object... args) {
       return ((JavascriptExecutor) DriverManager.getDriver()).executeScript(script, args);
    }
@@ -1002,6 +1073,7 @@ public class WebUI {
     * LƯU Ý: cách bấm này gọi thẳng vào sự kiện click của trang nên KHÔNG phản ánh đúng thao tác người dùng thật,
     * chỉ dùng khi đã thử clickElement() mà không được.
     */
+   @Step("Click on element {0} by JS")
    public static void clickElementByJS(By by) {
       waitForElementPresent(by);
       sleep(STEP_TIME);
@@ -1019,6 +1091,7 @@ public class WebUI {
     * Phải bắn kèm sự kiện input và change, vì gán thẳng value thì trang không hề biết giá trị đã đổi,
     * dẫn tới nút Save vẫn xám hoặc phần kiểm tra dữ liệu vẫn báo ô còn trống.
     */
+   @Step("Set text {1} on element {0} by JS")
    public static void setTextByJS(By by, String value) {
       waitForElementPresent(by);
       sleep(STEP_TIME);
@@ -1034,11 +1107,13 @@ public class WebUI {
       LogUtils.info("Set text by JS '" + value + "' on element " + by);
    }
 
+   @Step("Scroll to top of page")
    public static void scrollToTopPage() {
       executeJS("window.scrollTo(0, 0);");
       LogUtils.info("Scroll lên đầu trang.");
    }
 
+   @Step("Scroll to bottom of page")
    public static void scrollToBottomPage() {
       executeJS("window.scrollTo(0, document.body.scrollHeight);");
       LogUtils.info("Scroll xuống cuối trang.");
@@ -1051,6 +1126,7 @@ public class WebUI {
     * Mọi element nằm trong frame chỉ tìm thấy sau khi đã nhảy vào, tìm từ ngoài luôn báo không tồn tại.
     * Xong việc nhớ gọi switchToDefaultContent() để quay ra, nếu không các thao tác sau sẽ tìm nhầm chỗ.
     */
+   @Step("Switch to frame {0}")
    public static void switchToFrame(By by) {
       try {
          WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(EXPLICIT_WAIT_TIMEOUT), Duration.ofMillis(500));
@@ -1062,6 +1138,7 @@ public class WebUI {
       }
    }
 
+   @Step("Switch to frame index {0}")
    public static void switchToFrame(int index) {
       try {
          WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(EXPLICIT_WAIT_TIMEOUT), Duration.ofMillis(500));
@@ -1073,6 +1150,7 @@ public class WebUI {
       }
    }
 
+   @Step("Switch to frame {0}")
    public static void switchToFrame(String nameOrId) {
       try {
          WebDriverWait wait = new WebDriverWait(DriverManager.getDriver(), Duration.ofSeconds(EXPLICIT_WAIT_TIMEOUT), Duration.ofMillis(500));
@@ -1084,6 +1162,7 @@ public class WebUI {
       }
    }
 
+   @Step("Switch to default content")
    public static void switchToDefaultContent() {
       DriverManager.getDriver().switchTo().defaultContent();
       LogUtils.info("Switch về trang chính (default content).");
@@ -1091,14 +1170,17 @@ public class WebUI {
 
    //==================== Cửa sổ và tab ====================
 
+   @Step("Get current window handle")
    public static String getCurrentWindowHandle() {
       return DriverManager.getDriver().getWindowHandle();
    }
 
+   @Step("Get all window handles")
    public static Set<String> getAllWindowHandles() {
       return DriverManager.getDriver().getWindowHandles();
    }
 
+   @Step("Switch to window index {0}")
    public static void switchToWindowByIndex(int index) {
       List<String> handles = new ArrayList<>(DriverManager.getDriver().getWindowHandles());
       if (index < 0 || index >= handles.size()) {
@@ -1114,6 +1196,7 @@ public class WebUI {
     * Nếu không thấy thì quay về đúng cửa sổ ban đầu rồi mới báo fail,
     * tránh để driver mắc kẹt ở cửa sổ cuối cùng khiến các bước sau sai hết.
     */
+   @Step("Switch to window with title contains {0}")
    public static void switchToWindowByTitle(String title) {
       String originalHandle = DriverManager.getDriver().getWindowHandle();
       for (String handle : DriverManager.getDriver().getWindowHandles()) {
@@ -1128,6 +1211,7 @@ public class WebUI {
       Assert.fail("FAILED. Không tìm thấy cửa sổ nào có title chứa: " + title);
    }
 
+   @Step("Open new tab with URL: {0}")
    public static void openNewTab(String url) {
       DriverManager.getDriver().switchTo().newWindow(WindowType.TAB);
       DriverManager.getDriver().get(url);
@@ -1140,6 +1224,7 @@ public class WebUI {
     * Bắt buộc phải nhảy về, vì sau khi đóng thì driver không còn trỏ vào cửa sổ nào,
     * mọi lệnh gọi tiếp theo sẽ báo lỗi no such window.
     */
+   @Step("Close current tab")
    public static void closeCurrentTab() {
       Set<String> handles = DriverManager.getDriver().getWindowHandles();
       if (handles.size() <= 1) {
@@ -1159,18 +1244,21 @@ public class WebUI {
 
    //==================== Điều khiển trình duyệt ====================
 
+   @Step("Refresh page")
    public static void refreshPage() {
       DriverManager.getDriver().navigate().refresh();
       waitForPageLoaded();
       LogUtils.info("🔄 Refresh page.");
    }
 
+   @Step("Navigate back")
    public static void navigateBack() {
       DriverManager.getDriver().navigate().back();
       waitForPageLoaded();
       LogUtils.info("Quay lại trang trước.");
    }
 
+   @Step("Navigate forward")
    public static void navigateForward() {
       DriverManager.getDriver().navigate().forward();
       waitForPageLoaded();
@@ -1183,6 +1271,7 @@ public class WebUI {
       return title;
    }
 
+   @Step("Set window size {0}x{1}")
    public static void setWindowSize(int width, int height) {
       DriverManager.getDriver().manage().window().setSize(new org.openqa.selenium.Dimension(width, height));
       LogUtils.info("Set window size: " + width + "x" + height);
@@ -1195,6 +1284,7 @@ public class WebUI {
       setWindowSize(1920, 1080);
    }
 
+   @Step("Maximize window")
    public static void maximizeWindow() {
       DriverManager.getDriver().manage().window().maximize();
       LogUtils.info("Maximize window.");
@@ -1213,6 +1303,7 @@ public class WebUI {
     *
     * @return Đường dẫn đầy đủ của file ảnh, hoặc null nếu chụp không thành công
     */
+   @Step("Take screenshot {0}")
    public static String takeScreenshot(String screenshotName) {
       try {
          File source = ((TakesScreenshot) DriverManager.getDriver()).getScreenshotAs(OutputType.FILE);
@@ -1227,6 +1318,7 @@ public class WebUI {
     * Chỉ chụp riêng một element, hữu ích khi cần bằng chứng cho đúng dòng bị lỗi trong bảng dữ liệu
     * thay vì chụp cả trang rồi ngồi dò.
     */
+   @Step("Take screenshot of element {0}")
    public static String takeElementScreenshot(By by, String screenshotName) {
       try {
          waitForElementVisible(by);
@@ -1265,6 +1357,7 @@ public class WebUI {
     * Cách này KHÔNG mở hộp thoại chọn file của hệ điều hành nên chạy được cả trên CI.
     * Locator phải trỏ đúng vào thẻ input type=file, không phải nút Browse được tô vẽ đè lên.
     */
+   @Step("Upload file {1} to element {0}")
    public static void uploadFile(By inputFile, String filePath) {
       String absolutePath = getUploadFileAbsolutePath(filePath);
       waitForElementPresent(inputFile);
@@ -1280,6 +1373,7 @@ public class WebUI {
     * Hàm gỡ phần CSS đang giấu để gõ được đường dẫn vào, đây là trường hợp rất phổ biến
     * ở các giao diện tự vẽ lại nút Browse cho đẹp rồi ẩn thẻ input gốc.
     */
+   @Step("Upload file {1} to hidden element {0}")
    public static void uploadFileToHiddenInput(By inputFile, String filePath) {
       String absolutePath = getUploadFileAbsolutePath(filePath);
       waitForElementPresent(inputFile);
@@ -1411,6 +1505,7 @@ public class WebUI {
 
    //==================== Cookie ====================
 
+   @Step("Add cookie {0}")
    public static void addCookie(Cookie cookie) {
       DriverManager.getDriver().manage().addCookie(cookie);
       LogUtils.info("Thêm cookie: " + cookie.getName());
@@ -1420,22 +1515,27 @@ public class WebUI {
       addCookie(new Cookie(name, value));
    }
 
+   @Step("Get all cookies")
    public static Set<Cookie> getAllCookies() {
       return DriverManager.getDriver().manage().getCookies();
    }
 
+   @Step("Get cookie value of {0}")
    public static String getCookieValue(String name) {
       Cookie cookie = DriverManager.getDriver().manage().getCookieNamed(name);
       String value = cookie == null ? null : cookie.getValue();
       LogUtils.info("==> Cookie " + name + ": " + value);
+      AllureManager.saveTextLog("==> Cookie " + name + ": " + value);
       return value;
    }
 
+   @Step("Delete cookie {0}")
    public static void deleteCookie(String name) {
       DriverManager.getDriver().manage().deleteCookieNamed(name);
       LogUtils.info("Xoá cookie: " + name);
    }
 
+   @Step("Delete all cookies")
    public static void deleteAllCookies() {
       DriverManager.getDriver().manage().deleteAllCookies();
       LogUtils.info("Xoá toàn bộ cookie.");

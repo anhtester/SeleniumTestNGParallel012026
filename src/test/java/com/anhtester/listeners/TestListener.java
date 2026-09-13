@@ -4,6 +4,7 @@ import com.anhtester.constants.ConfigData;
 import com.anhtester.helpers.CaptureHelper;
 import com.anhtester.helpers.PropertiesHelper;
 import com.anhtester.keywords.WebUI;
+import com.anhtester.reports.AllureManager;
 import com.anhtester.reports.ExtentReportManager;
 import com.anhtester.reports.ExtentTestManager;
 import com.anhtester.utils.LogUtils;
@@ -78,6 +79,10 @@ public class TestListener implements ITestListener {
       ExtentTestManager.addScreenshot(result.getName());
       ExtentTestManager.logMessage(Status.FAIL, result.getThrowable().toString());
       ExtentTestManager.logMessage(Status.FAIL, "❌ Test case " + result.getName() + " is failed.");
+
+      //Allure Report
+      //AllureManager.saveTextLog(result.getName() + " is failed.");
+      AllureManager.saveScreenshotPNG();
 
       //Screenshot + Ghi Logs
       if(ConfigData.SCREENSHOT_FAILED_STEP.equalsIgnoreCase("true")){

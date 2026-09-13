@@ -1,0 +1,40 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="Suite Allure Report" parallel="none" thread-count="4">
+
+   <test name="Login Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai36_AllureReport.testcases.LoginTest" />
+      </classes>
+   </test>
+
+   <test name="Dashboard Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai36_AllureReport.testcases.DashboardTest" />
+      </classes>
+   </test>
+
+   <test name="Customer Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai36_AllureReport.testcases.CustomersTest" />
+      </classes>
+   </test>
+
+   <test name="Project Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai36_AllureReport.testcases.ProjectsTest" />
+      </classes>
+   </test>
+
+   <test name="Task Test" parallel="methods">
+      <parameter name="browser" value="chrome" />
+      <classes>
+         <class name="com.anhtester.Bai36_AllureReport.testcases.TasksTest" />
+      </classes>
+   </test>
+
+</suite>

@@ -26,7 +26,7 @@
       <dependency>
          <groupId>org.testng</groupId>
          <artifactId>testng</artifactId>
-         <version>7.12.0</version>
+         <version>7.4.0</version>
       </dependency>
 
       <!-- Source: https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
@@ -99,6 +99,35 @@
          <version>5.1.2</version>
       </dependency>
 
+      <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-testng -->
+      <dependency>
+         <groupId>io.qameta.allure</groupId>
+         <artifactId>allure-testng</artifactId>
+         <version>2.35.5</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-attachments -->
+      <dependency>
+         <groupId>io.qameta.allure</groupId>
+         <artifactId>allure-attachments</artifactId>
+         <version>2.35.5</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+      <dependency>
+         <groupId>org.aspectj</groupId>
+         <artifactId>aspectjweaver</artifactId>
+         <version>1.9.25.1</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+      <dependency>
+         <groupId>org.projectlombok</groupId>
+         <artifactId>lombok</artifactId>
+         <version>1.18.48</version>
+         <scope>provided</scope>
+      </dependency>
+
    </dependencies>
 
    <build>
@@ -111,8 +140,39 @@
 
             <configuration>
                <suiteXmlFiles>
-                  <suiteXmlFile>src/test/resources/suites/Suite_Bai29_PropertiesConfig.xml</suiteXmlFile>
+                  <suiteXmlFile>src/test/resources/suites/Suite_Bai36_AllureReport.xml</suiteXmlFile>
                </suiteXmlFiles>
+
+               <argLine>
+                  -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/1.9.25.1/aspectjweaver-1.9.25.1.jar"
+               </argLine>
+               <testFailureIgnore>true</testFailureIgnore>
+               <systemPropertyVariables>
+                  <!--Đường dẫn xuất ra data cho Allure report-->
+                  <allure.results.directory>target/allure-results</allure.results.directory>
+               </systemPropertyVariables>
+
+            </configuration>
+
+         </plugin>
+
+         <!-- https://mvnrepository.com/artifact/io.qameta.allure/allure-maven -->
+         <!-- Tự tải Allure 2 CLI vào thư mục .allure/ của repo, không cần cài Allure hay set biến môi trường trên máy -->
+         <plugin>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-maven</artifactId>
+            <version>2.17.0</version>
+
+            <configuration>
+               <!--Phiên bản Allure 2 CLI dùng để dựng report-->
+               <reportVersion>2.46.1</reportVersion>
+               <!--Nơi giải nén Allure CLI, nằm ngay trong repo-->
+               <installDirectory>${project.basedir}/.allure</installDirectory>
+               <!--Tính từ thư mục target, khớp với allure.results.directory của Surefire ở trên-->
+               <resultsDirectory>allure-results</resultsDirectory>
+               <reportDirectory>${project.basedir}/exports/reports/allure-report</reportDirectory>
+               <!--Gộp report thành 1 file index.html, mở trực tiếp bằng trình duyệt không cần server-->
+               <singleFile>true</singleFile>
             </configuration>
 
          </plugin>
