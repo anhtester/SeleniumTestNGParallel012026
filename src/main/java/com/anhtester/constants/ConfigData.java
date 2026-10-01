@@ -15,8 +15,8 @@ public class ConfigData {
    public static String KEY_PROJECT_NAME = "projectName";
 
    //File Excel dành cho data test cases
-   public static String excel_path_crm_data = PropertiesHelper.getValue("excel_path_crm_data");
-   public static String excel_path_crm_data_customer = PropertiesHelper.getValue("excel_path_crm_data_customer");
+   public static String EXCEL_PATH_CRM_DATA = PropertiesHelper.getValue("EXCEL_PATH_CRM_DATA");
+   public static String EXCEL_PATH_CRM_DATA_CUSTOMER = PropertiesHelper.getValue("EXCEL_PATH_CRM_DATA_CUSTOMER");
 
    public static String SCREENSHOT_PATH = PropertiesHelper.getValue("SCREENSHOT_PATH");
    public static String VIDEO_RECORD_PATH = PropertiesHelper.getValue("VIDEO_RECORD_PATH");

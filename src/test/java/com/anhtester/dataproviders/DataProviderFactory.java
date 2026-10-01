@@ -48,7 +48,7 @@ public class DataProviderFactory {
    @DataProvider(name = "data_provider_addcustomer_excel")
    public Object[][] dataAddCustomerFromExcel() {
       ExcelHelper excelHelper = new ExcelHelper();
-      Object[][] data = excelHelper.getExcelData(ConfigData.excel_path_crm_data, "AddCustomer");
+      Object[][] data = excelHelper.getExcelData(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer");
       System.out.println("Data from Excel: " + data);
       return data;
    }
@@ -56,7 +56,7 @@ public class DataProviderFactory {
    @DataProvider(name = "dp_addcustomer_excel_start_end")
    public Object[][] dp_addcustomer_excel_start_end() {
       ExcelHelper excelHelper = new ExcelHelper();
-      Object[][] data = excelHelper.getDataHashTable(ConfigData.excel_path_crm_data, "AddCustomer", 3,5);
+      Object[][] data = excelHelper.getDataHashTable(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer", 3,5);
       System.out.println("Data from Excel: " + data);
       return data;
    }
@@ -69,7 +69,7 @@ public class DataProviderFactory {
               3,
               4
       }; //Dòng cụ thể cần lấy
-      Object[][] data = excelHelper.getDataFromSpecificRows(ConfigData.excel_path_crm_data, "AddCustomer", specificRows);
+      Object[][] data = excelHelper.getDataFromSpecificRows(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer", specificRows);
       System.out.println("getDataFromSpecificRows: " + data);
       return data;
    }
@@ -82,7 +82,7 @@ public class DataProviderFactory {
               3,
               4
       }; //Dòng cụ thể cần lấy
-      Object[][] data = excelHelper.getDataHashTableFromSpecificRows(ConfigData.excel_path_crm_data, "AddCustomer", specificRows);
+      Object[][] data = excelHelper.getDataHashTableFromSpecificRows(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer", specificRows);
       System.out.println("getDataHashTableFromSpecificRows: " + data);
       return data;
    }
@@ -92,7 +92,7 @@ public class DataProviderFactory {
       String testCaseName = method.getName();          // TestNG tự truyền vào
 
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
 
       // Quét tìm dòng có TEST_CASE_NAME khớp tên method
       for (int i = 1; i <= excelHelper.getLastRowNum(); i++) {

@@ -21,7 +21,7 @@ public class PropertiesHelper {
     * dev.properties / staging.properties những key nào thật sự khác với file chung.
     * <p>
     * Môi trường được chọn theo thứ tự ưu tiên: {@code -Denv} (Maven) > biến môi trường
-    * {@code ENV} > key {@code env} trong config.properties. Không khai báo ở đâu cả
+    * {@code ENV} > key {@code ENV} trong config.properties. Không khai báo ở đâu cả
     * thì chỉ load mỗi config.properties.
     */
    public static Properties loadAllFiles() {
@@ -83,7 +83,7 @@ public class PropertiesHelper {
    }
 
    /**
-    * Tìm tên môi trường trước khi load, nên phải đọc thẳng key env trong file chung
+    * Tìm tên môi trường trước khi load, nên phải đọc thẳng key ENV trong file chung
     * thay vì gọi getValue() (lúc này properties còn chưa được nạp).
     */
    private static String resolveEnv() {
@@ -95,7 +95,7 @@ public class PropertiesHelper {
          env = System.getenv("ENV");
       }
       if (isEmpty(env)) {
-         env = readKeyDirectly(relPropertiesFilePathDefault, "env");
+         env = readKeyDirectly(relPropertiesFilePathDefault, "ENV");
       }
       return isEmpty(env) ? "" : env.trim();
    }

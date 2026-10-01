@@ -29,7 +29,7 @@ public class ParameterManager {
     * <ol>
     *   <li>System property từ Maven: {@code mvn test -Dbrowser=firefox}</li>
     *   <li>Biến môi trường: {@code BROWSER=firefox} (dùng cho CI/CD)</li>
-    *   <li>File properties: {@code config.properties}</li>
+    *   <li>File properties: {@code BROWSER=firefox} trong {@code config.properties}</li>
     *   <li>{@code <parameter>} trong file XML của TestNG</li>
     *   <li>defaultValue</li>
     * </ol>
@@ -46,7 +46,11 @@ public class ParameterManager {
          value = System.getenv(name.toUpperCase());
       }
 
-      // 3. File properties
+      // 3. File properties: key viết in hoa (BROWSER), còn -D và <parameter> vẫn giữ tên gốc (browser)
+      //    Không có bản in hoa thì thử đúng tên gốc, cho các key như url trong dev.properties
+      if (isEmpty(value)) {
+         value = PropertiesHelper.getValue(name.toUpperCase());
+      }
       if (isEmpty(value)) {
          value = PropertiesHelper.getValue(name);
       }

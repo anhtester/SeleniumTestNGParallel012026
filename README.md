@@ -451,13 +451,13 @@ src/test/resources/configs/
 
 ```properties
 # config.properties
-env = staging          # Chọn môi trường. Để trống = chỉ dùng mỗi file này
-browser = firefox
-headless = true
-window_size_x = 1920
-window_size_y = 1080
-explicit_wait_timeout = 10
-excel_path_crm_data = src/test/resources/testdata/crm_data.xlsx
+ENV = staging          # Chọn môi trường. Để trống = chỉ dùng mỗi file này
+BROWSER = firefox
+HEADLESS = true
+WINDOW_SIZE_X = 1920
+WINDOW_SIZE_Y = 1080
+EXPLICIT_WAIT_TIMEOUT = 10
+EXCEL_PATH_CRM_DATA = src/test/resources/testdata/crm_data.xlsx
 ```
 
 ```properties
@@ -466,7 +466,7 @@ url = https://staging.anhtester.com
 base.uri = https://staging.anhtester.com/api/v1
 ```
 
-> **Vì sao tách hai tầng file:** file chung giữ những gì mọi môi trường đều giống nhau, file môi trường **chỉ khai báo phần khác biệt**. Copy nguyên bộ key sang từng file môi trường là sớm muộn cũng lệch nhau — sửa `explicit_wait_timeout` ở `config.properties` mà quên sửa ở `dev.properties`, test chạy dev lại dùng giá trị cũ.
+> **Vì sao tách hai tầng file:** file chung giữ những gì mọi môi trường đều giống nhau, file môi trường **chỉ khai báo phần khác biệt**. Copy nguyên bộ key sang từng file môi trường là sớm muộn cũng lệch nhau — sửa `EXPLICIT_WAIT_TIMEOUT` ở `config.properties` mà quên sửa ở `dev.properties`, test chạy dev lại dùng giá trị cũ.
 
 ### Thứ tự ưu tiên khi lấy một giá trị cấu hình
 
@@ -476,7 +476,7 @@ base.uri = https://staging.anhtester.com/api/v1
 | :-- | :--- | :--- |
 | 1 | System property (Maven / JVM) | `mvn test -Dbrowser=firefox` |
 | 2 | Biến môi trường (`name` rồi `NAME`) | `BROWSER=firefox` — dùng cho CI/CD |
-| 3 | File properties | `browser = firefox` trong `config.properties` |
+| 3 | File properties (key `NAME` in hoa, không có thì thử `name`) | `BROWSER = firefox` trong `config.properties` |
 | 4 | `<parameter>` trong suite XML của luồng đang chạy | `<parameter name="browser" value="edge"/>` |
 | 5 | `defaultValue` truyền vào | `"chrome"` |
 
@@ -490,7 +490,7 @@ public static String getBrowser() {
 
 ### Chọn môi trường (`env`)
 
-Riêng `env` **không** đi qua `getConfigValue()` — nó là thứ quyết định file nào được load, nên phải chốt xong **trước** lúc load. `PropertiesHelper.resolveEnv()` tìm theo thứ tự: `-Denv` → biến môi trường `env` / `ENV` → key `env` trong `config.properties`. Không khai báo ở đâu cả thì chỉ load mỗi `config.properties`.
+Riêng `env` **không** đi qua `getConfigValue()` — nó là thứ quyết định file nào được load, nên phải chốt xong **trước** lúc load. `PropertiesHelper.resolveEnv()` tìm theo thứ tự: `-Denv` → biến môi trường `env` / `ENV` → key `ENV` trong `config.properties`. Không khai báo ở đâu cả thì chỉ load mỗi `config.properties`.
 
 ```bash
 mvn test "-Denv=dev"
@@ -551,7 +551,7 @@ boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
 | File | Nội dung |
 | :--- | :--- |
 | `helpers/ExcelHelper.java` | Mở file Excel theo sheet, đọc cell bằng **tên cột**, ghi cell kèm tô màu theo trạng thái. |
-| `constants/ConfigData.java` | Thêm `excel_path_crm_data` — đường dẫn file Excel lấy từ `config.properties`, không hardcode trong test. |
+| `constants/ConfigData.java` | Thêm `EXCEL_PATH_CRM_DATA` — đường dẫn file Excel lấy từ `config.properties`, không hardcode trong test. |
 | `Bai30_Excel_Data/DemoExcelData.java` | Demo trần: đọc 3 dòng data, ghi 3 dòng `STATUS` để thấy màu. |
 | `Bai30_Excel_Data/testcases/LoginTest.java` | Bộ 8 TC Login của Bài 28, thay toàn bộ data hardcode bằng data đọc từ Excel. |
 
@@ -596,7 +596,7 @@ boolean headless = Boolean.parseBoolean(ParameterManager.getHeadlessMode());
 
 ```java
 ExcelHelper excelHelper = new ExcelHelper();
-excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
 
 String email = excelHelper.getCellData("EMAIL", 1);        //admin@example.com
 String password = excelHelper.getCellData("PASSWORD", 1);  //123456
@@ -608,7 +608,7 @@ String password = excelHelper.getCellData("PASSWORD", 1);  //123456
 @Test(priority = 1)
 public void testLoginCRM_Success() {
    ExcelHelper excelHelper = new ExcelHelper();
-   excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+   excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
    dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 1), excelHelper.getCellData("PASSWORD", 1));
    loginPage.verifyLoginSuccess();
 }
@@ -638,7 +638,7 @@ excelHelper.setCellData("SELENIUM JAVA", "STATUS", 3);   //giá trị khác -> k
 
 - **Ghi Excel KHÔNG an toàn khi chạy song song.** Đây là cùng một cái bẫy với file JSON ở phần dưới: file Excel là tài nguyên dùng chung cho cả máy. Hai luồng cùng `wb.write()` xuống một file là ghi đè kết quả của nhau, tệ hơn là file hỏng hẳn. **Đọc song song thì không sao** — mỗi test case tự `new ExcelHelper()` và mở stream riêng của mình, đọc xong đóng luôn. Đây là lý do `LoginTest` của Bài 30 chỉ đọc, phần ghi `STATUS` để riêng ở `DemoExcelData` chạy tuần tự.
 
-- **Đường dẫn file Excel nằm ở `config.properties`, không hardcode.** `ConfigData.excel_path_crm_data` gọi `PropertiesHelper.getValue()` ngay lúc class được nạp — an toàn vì `getValue()` tự gọi `loadAllFiles()` khi config chưa được load.
+- **Đường dẫn file Excel nằm ở `config.properties`, không hardcode.** `ConfigData.EXCEL_PATH_CRM_DATA` gọi `PropertiesHelper.getValue()` ngay lúc class được nạp — an toàn vì `getValue()` tự gọi `loadAllFiles()` khi config chưa được load.
 
 ### Suite của Bài 30
 
@@ -766,7 +766,7 @@ public Object[][] dataCRM() {
 @DataProvider(name = "data_provider_addcustomer_excel")
 public Object[][] dataAddCustomerFromExcel() {
    ExcelHelper excelHelper = new ExcelHelper();
-   return excelHelper.getExcelData(ConfigData.excel_path_crm_data, "AddCustomer");
+   return excelHelper.getExcelData(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer");
 }
 ```
 
@@ -778,7 +778,7 @@ public void testDataProviderAddCustomerExcel(String company, String vat, String 
 **Kiểu 2 — `Hashtable`, method chỉ nhận đúng 1 tham số:**
 
 ```java
-Object[][] data = excelHelper.getDataHashTable(ConfigData.excel_path_crm_data, "AddCustomer", 3, 5);
+Object[][] data = excelHelper.getDataHashTable(ConfigData.EXCEL_PATH_CRM_DATA, "AddCustomer", 3, 5);
 ```
 
 ```java
@@ -802,7 +802,7 @@ public Object[][] dataLogin(Method method) {
    String testCaseName = method.getName();          // TestNG tự truyền vào
 
    ExcelHelper excelHelper = new ExcelHelper();
-   excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+   excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
 
    // Quét tìm dòng có TEST_CASE_NAME khớp tên method
    for (int i = 1; i <= excelHelper.getLastRowNum(); i++) {

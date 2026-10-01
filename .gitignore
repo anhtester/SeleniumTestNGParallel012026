@@ -30,9 +30,9 @@ out/
 CLAUDE.md
 AGENTS.md
 exports/
-reports/
 screenshots/
 logs/
 
 # Allure 2 CLI do plugin allure-maven tự tải về khi chạy mvn allure:report / allure:serve
 .allure/
+allure-report/

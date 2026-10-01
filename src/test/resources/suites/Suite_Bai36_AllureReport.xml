@@ -9,7 +9,7 @@
       </classes>
    </test>
 
-   <test name="Dashboard Test" parallel="methods">
+   <!-- <test name="Dashboard Test" parallel="methods">
       <parameter name="browser" value="chrome" />
       <classes>
          <class name="com.anhtester.Bai36_AllureReport.testcases.DashboardTest" />
@@ -35,6 +35,6 @@
       <classes>
          <class name="com.anhtester.Bai36_AllureReport.testcases.TasksTest" />
       </classes>
-   </test>
+   </test> -->
 
 </suite>

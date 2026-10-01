@@ -15,9 +15,9 @@ public class DemoPropertiesConfig {
    @Test
    public void testGetValueProperties() {
       //Key chỉ có trong file chung config.properties
-      System.out.println("browser: " + PropertiesHelper.getValue("browser"));
-      System.out.println("headless: " + PropertiesHelper.getValue("headless"));
-      System.out.println("screenshot_fail_steps: " + PropertiesHelper.getValue("screenshot_fail_steps"));
+      System.out.println("browser: " + PropertiesHelper.getValue("BROWSER"));
+      System.out.println("headless: " + PropertiesHelper.getValue("HEADLESS"));
+      System.out.println("SCREENSHOT_FAILED_STEP: " + PropertiesHelper.getValue("SCREENSHOT_FAILED_STEP"));
 
       //Key đến từ file môi trường (dev.properties / staging.properties)
       System.out.println("env đang chạy: " + ParameterManager.getEnv());
@@ -33,6 +33,6 @@ public class DemoPropertiesConfig {
       System.out.println("env đang chạy: " + ParameterManager.getEnv());
       System.out.println("url: " + PropertiesHelper.getValue("url"));
       System.out.println("base.uri: " + PropertiesHelper.getValue("base.uri"));
-      System.out.println("browser lấy từ file chung: " + PropertiesHelper.getValue("browser"));
+      System.out.println("browser lấy từ file chung: " + PropertiesHelper.getValue("BROWSER"));
    }
 }

@@ -9,15 +9,22 @@ import com.anhtester.reports.ExtentReportManager;
 import com.anhtester.reports.ExtentTestManager;
 import com.anhtester.utils.LogUtils;
 import com.aventstack.extentreports.Status;
+
+import org.testng.IInvokedMethod;
+import org.testng.IInvokedMethodListener;
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 
-import org.testng.ITestContext;
-import org.testng.ITestListener;
-import org.testng.ITestResult;
+public class TestListener implements ITestListener, IInvokedMethodListener {
 
-public class TestListener implements ITestListener {
+//   @Override
+//   public void afterInvocation(IInvokedMethod method, ITestResult result) {
+//      //Allure Report: chụp ở đây vì từ TestNG 7.9+ AllureTestNg.onTestFailure chạy trước và đã đóng test case
+//      if (method.isTestMethod() && result.getStatus() == ITestResult.FAILURE) {
+//         AllureManager.saveScreenshotPNG();
+//      }
+//   }
 
    public String getTestName(ITestResult result) {
       return result.getTestName() != null ? result.getTestName() : result.getMethod().getConstructorOrMethod().getName();
@@ -79,10 +86,6 @@ public class TestListener implements ITestListener {
       ExtentTestManager.addScreenshot(result.getName());
       ExtentTestManager.logMessage(Status.FAIL, result.getThrowable().toString());
       ExtentTestManager.logMessage(Status.FAIL, "❌ Test case " + result.getName() + " is failed.");
-
-      //Allure Report
-      //AllureManager.saveTextLog(result.getName() + " is failed.");
-      AllureManager.saveScreenshotPNG();
 
       //Screenshot + Ghi Logs
       if(ConfigData.SCREENSHOT_FAILED_STEP.equalsIgnoreCase("true")){

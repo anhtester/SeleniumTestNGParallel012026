@@ -34,7 +34,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 1)
    public void testLoginCRM_Success() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 1), excelHelper.getCellData("PASSWORD", 1));
       loginPage.verifyLoginSuccess();
    }
@@ -42,7 +42,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 2)
    public void testLoginFailWithEmailInvalid() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 2), excelHelper.getCellData("PASSWORD", 2));
       loginPage.verifyLoginFail("Invalid email or password");
    }
@@ -50,7 +50,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 3)
    public void testLoginFailWithPasswordInvalid() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 3), excelHelper.getCellData("PASSWORD", 3));
       loginPage.verifyLoginFail("Invalid email or password");
    }
@@ -58,7 +58,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 4)
    public void testLoginFailWithEmailNull() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 4), excelHelper.getCellData("PASSWORD", 4));
       loginPage.verifyLoginFail("The Email Address field is required.");
    }
@@ -66,7 +66,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 5)
    public void testLoginFailWithPasswordNull() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 5), excelHelper.getCellData("PASSWORD", 5));
       loginPage.verifyLoginFail("The Password field is required.");
    }
@@ -74,7 +74,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 6)
    public void testLoginFailWithEmailAndPasswordNull() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 6), excelHelper.getCellData("PASSWORD", 6));
       loginPage.verifyLoginFailWithEmailAndPasswordNull();
    }
@@ -82,7 +82,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 7)
    public void testLoginFailWithEmailFormatInvalid_01() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 7), excelHelper.getCellData("PASSWORD", 7));
       loginPage.verifyAlertEmailFormatInvalid();
    }
@@ -90,7 +90,7 @@ public class LoginTest extends BaseTest {
    @Test(priority = 8)
    public void testLoginFailWithEmailFormatInvalid_02() {
       ExcelHelper excelHelper = new ExcelHelper();
-      excelHelper.setExcelFile(ConfigData.excel_path_crm_data, "Login");
+      excelHelper.setExcelFile(ConfigData.EXCEL_PATH_CRM_DATA, "Login");
       dashboardPage = loginPage.loginCRM(excelHelper.getCellData("EMAIL", 8), excelHelper.getCellData("PASSWORD", 8));
       loginPage.verifyLoginFail("The Password field is required.");
    }
